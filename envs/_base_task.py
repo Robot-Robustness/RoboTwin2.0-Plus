@@ -133,13 +133,11 @@ class Base_Task(gym.Env):
         if self.apply_camera_ablation:
             camera_cfg = random_setting.get("camera", {})
             self.camera_perturb_config = {
-                "apply_probability": camera_cfg.get("apply_probability", 1.0),
                 "c1": camera_cfg.get("c1", {"enabled": False}),
                 "c2": camera_cfg.get("c2", {"enabled": False}),
                 "c3": camera_cfg.get("c3", {"enabled": False}),
             }
             print("[Camera Ablation] Using embedded config from main YAML")
-            print(f"  Prob: {self.camera_perturb_config['apply_probability']}")
             print(f"  C1: {self.camera_perturb_config['c1']}")
             print(f"  C2: {self.camera_perturb_config['c2']}")
             print(f"  C3: {self.camera_perturb_config['c3']}")

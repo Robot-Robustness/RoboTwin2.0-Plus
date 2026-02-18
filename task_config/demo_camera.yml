@@ -16,8 +16,6 @@ domain_randomization:
   apply_camera_ablation: true
   # All C1/C2/C3 parameters are embedded here (no separate file needed)
   camera:
-    apply_probability: 1.0           # chance to perturb at all (set <1.0 for some clean episodes)
-
     c1:                             # Distance scaling
       enabled: true
       prob: 1.0
