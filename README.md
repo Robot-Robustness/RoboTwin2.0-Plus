@@ -1,174 +1,346 @@
-<h1 align="center">
-  <a href="https://robotwin-benchmark.github.io"><b>RoboTwin</b> Bimanual Robotic Manipulation Platform<br></a>
-</h1>
-<h2 align="center">Lastest Version: RoboTwin 2.0<br>🤲 <a href="https://robotwin-platform.github.io/">Webpage</a> | <a href="https://robotwin-platform.github.io/doc/">Document</a> | <a href="https://arxiv.org/abs/2506.18088">Paper</a> | <a href="https://robotwin-platform.github.io/doc/community/index.html">Community</a> | <a href="https://robotwin-platform.github.io/leaderboard">Leaderboard</a></h2>
+# RoboTwin-Plus: Robustness Testing via Structured Perturbations
 
-https://private-user-images.githubusercontent.com/88101805/463126988-e3ba1575-4411-4a36-ad65-f0b2f49890c3.mp4
+> Extending RoboTwin with LIBERO-Plus-style perturbation categories
+> Source: `/work/behnam/RoboTwin/` | Upstream: `/shared_work/markhsp/RoboTwin_repo/`
+> Plus patches: `/shared_work/markhsp/robotwin_plus/`
 
-**[2.0 Version (lastest)]** RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation<br>
-<i>Under Review 2025</i>: [Webpage](https://robotwin-platform.github.io/) | [Document](https://robotwin-platform.github.io/doc) | [PDF](https://arxiv.org/pdf/2506.18088) | [arXiv](https://arxiv.org/abs/2506.18088) | [Talk (in Chinese)](https://www.bilibili.com/video/BV18p3izYE63/?spm_id_from=333.337.search-card.all.click) | [机器之心](https://mp.weixin.qq.com/s/SwORezmol2Qd9YdrGYchEA) | [Leaderboard](https://robotwin-platform.github.io/leaderboard)<br>
-> <a href="https://tianxingchen.github.io/">Tianxing Chen</a><sup>\*</sup>, Zanxin Chen<sup>\*</sup>, Baijun Chen<sup>\*</sup>, Zijian Cai<sup>\*</sup>, <a href="https://10-oasis-01.github.io">Yibin Liu</a><sup>\*</sup>, <a href="https://kolakivy.github.io/">Qiwei Liang</a>, Zixuan Li, Xianliang Lin, <a href="https://geyiheng.github.io">Yiheng Ge</a>, Zhenyu Gu, Weiliang Deng, Yubin Guo, Tian Nian, Xuanbing Xie, <a href="https://www.linkedin.com/in/yusen-qin-5b23345b/">Qiangyu Chen</a>, Kailun Su, Tianling Xu, <a href="http://luoping.me/">Guodong Liu</a>, <a href="https://aaron617.github.io/">Mengkang Hu</a>, <a href="https://c7w.tech/about">Huan-ang Gao</a>, Kaixuan Wang, <a href="https://liang-zx.github.io/">Zhixuan Liang</a>, <a href="https://www.linkedin.com/in/yusen-qin-5b23345b/">Yusen Qin</a>, Xiaokang Yang, <a href="http://luoping.me/">Ping Luo</a><sup>†</sup>, <a href="https://yaomarkmu.github.io/">Yao Mu</a><sup>†</sup>
+---
 
-**[RoboTwin Dual-Arm Collaboration Challenge@CVPR'25 MEIS Workshop]** RoboTwin Dual-Arm Collaboration Challenge Technical Report at CVPR 2025 MEIS Workshop<br>
-Official Technical Report: [PDF](https://arxiv.org/pdf/2506.23351) | [arXiv](https://arxiv.org/abs/2506.23351) | [量子位](https://mp.weixin.qq.com/s/qxqs9vvvHsAJ-0hoYANYzQ)<br>
+## LIBERO-Plus Reference Taxonomy
 
-**[1.0 Version]** RoboTwin: Dual-Arm Robot Benchmark with Generative Digital Twins<br>
-Accepted to <i style="color: red; display: inline;"><b>CVPR 2025 (Highlight)</b></i>: [PDF](https://arxiv.org/pdf/2504.13059) | [arXiv](https://arxiv.org/abs/2504.13059)<br>
-> <a href="https://yaomarkmu.github.io/">Yao Mu</a><sup>* †</sup>, <a href="https://tianxingchen.github.io">Tianxing Chen</a><sup>* </sup>, Zanxin Chen<sup>* </sup>, <a href="https://shijiapeng03.github.io">Shijia Peng</a><sup>* </sup>, Zhiqian Lan, Zeyu Gao, Zhixuan Liang, Qiaojun Yu, Yude Zou, Mingkun Xu, Lunkai Lin, Zhiqiang Xie, Mingyu Ding, <a href="http://luoping.me/">Ping Luo</a><sup>†</sup>.
+LIBERO-Plus (arXiv: 2510.13626) defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 difficulty levels for evaluating VLA robustness:
 
-**[Early Version]** RoboTwin: Dual-Arm Robot Benchmark with Generative Digital Twins (early version)<br>
-Accepted to <i style="color: red; display: inline;"><b>ECCV Workshop 2024 (Best Paper Award)</b></i>: [PDF](https://arxiv.org/pdf/2409.02920) | [arXiv](https://arxiv.org/abs/2409.02920)<br>
-> <a href="https://yaomarkmu.github.io/">Yao Mu</a><sup>* †</sup>, <a href="https://tianxingchen.github.io">Tianxing Chen</a><sup>* </sup>, Shijia Peng<sup>*</sup>, Zanxin Chen<sup>*</sup>, Zeyu Gao, Zhiqian Lan, Yude Zou, Lunkai Lin, Zhiqiang Xie, <a href="http://luoping.me/">Ping Luo</a><sup>†</sup>.
+| Dimension | Sub-dims | Codes | Description |
+|-----------|----------|-------|-------------|
+| **Objects Layout** | 2 | O1, O2 | O1: confounding/distractor objects (416 unseen objects); O2: target object pose perturbation |
+| **Background Textures** | 2 | B1, B2 | B1: scene theme (950 curated textures); B2: surface/tabletop appearance |
+| **Light Conditions** | 4 | L1-L4 | L1: diffuse color; L2: direction; L3: specular; L4: shadows |
+| **Camera Viewpoints** | 3 | C1-C3 | C1: distance; C2: spherical position; C3: orientation |
+| **Robot Initial States** | 1 | -- | Initial joint angle perturbation (0.1-0.5 rad) |
+| **Language Instructions** | 3 | R1-R3 | R1: distraction; R2: common sense rewording; R3: reasoning chain |
+| **Sensor Noise** | 5 | N1-N5 | N1: motion blur; N2: gaussian blur; N3: zoom blur; N4: fog; N5: glass blur |
 
+---
 
+## RoboTwin-Plus Coverage Map
 
-# 📚 Overview
+| LIBERO-Plus | Code | Status | Config File |
+|-------------|------|--------|-------------|
+| Sensor: Motion blur | N1 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
+| Sensor: Gaussian blur | N2 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
+| Sensor: Zoom blur | N3 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
+| Sensor: Fog | N4 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
+| Sensor: Glass blur | N5 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
+| Light: Diffuse tint | L1 | DONE | `demo_light.yml` |
+| Light: Direction | L2 | DONE | `demo_light.yml` |
+| Light: Specular | L3 | DONE | `demo_light.yml` |
+| Light: Shadows | L4 | DONE | `demo_light.yml` |
+| Camera: Distance | C1 | DONE | `demo_camera.yml` |
+| Camera: Spherical | C2 | DONE | `demo_camera.yml` |
+| Camera: Orientation | C3 | DONE | `demo_camera.yml` |
+| Robot initial state | -- | DONE | `demo_robot_state.yml` |
+| Language: Distraction | R1 | **DONE** | `demo_language.yml` / `demo_language_plus.yml` |
+| Language: Common sense | R2 | **DONE** | `demo_language_r2.yml` / `demo_language_plus.yml` |
+| Language: Reasoning chain | R3 | **DONE** | `demo_language_r3.yml` / `demo_language_plus.yml` |
+| Objects: Confounders | O1 | **DONE (enhanced)** | `demo_objects_plus.yml` |
+| Objects: Target pose | O2 | **DONE** | `demo_objects_plus.yml` |
+| Background: Scene theme | B1 | **DONE (enhanced)** | `demo_background_plus.yml` |
+| Background: Surface | B2 | **DONE** | `demo_background_plus.yml` |
 
-| Branch Name | Link |
-|-------------|------|
-| 2.0 Version Branch | [main](https://github.com/RoboTwin-Platform/RoboTwin/tree/main) (latest) |
-| IsaacLab-Arena Branch | [IsaacLab-Arena](https://github.com/RoboTwin-Platform/RoboTwin/tree/IsaacLab-Arena) |
-| RLinf Branch | [RLinf_support](https://github.com/RoboTwin-Platform/RoboTwin/tree/RLinf_support) |
-| WBCD 2026 Branch | [WBCD-2026](https://github.com/RoboTwin-Platform/RoboTwin/tree/WBCD-2026) |
-| 1.0 Version Branch | [1.0 Version](https://github.com/RoboTwin-Platform/RoboTwin/tree/RoboTwin-1.0) |
-| 1.0 Version Code Generation Branch | [1.0 Version GPT](https://github.com/RoboTwin-Platform/RoboTwin/tree/gpt) |
-| Early Version Branch | [Early Version](https://github.com/RoboTwin-Platform/RoboTwin/tree/early_version) |
-| 第十九届“挑战杯”人工智能专项赛分支 | [Challenge-Cup-2025](https://github.com/RoboTwin-Platform/RoboTwin/tree/Challenge-Cup-2025) |
-| CVPR 2025 Challenge Round 1 Branch | [CVPR-Challenge-2025-Round1](https://github.com/RoboTwin-Platform/RoboTwin/tree/CVPR-Challenge-2025-Round1) |
-| CVPR 2025 Challenge Round 2 Branch | [CVPR-Challenge-2025-Round2](https://github.com/RoboTwin-Platform/RoboTwin/tree/CVPR-Challenge-2025-Round2) |
+**Summary: 21/21 LIBERO-Plus sub-dimensions fully implemented.**
 
+---
 
+## Deployment
 
-# 🐣 Update
-* **2026/01/23**, We update IsaacLab-Arena and <a href="https://github.com/RLinf/RLinf">RLinf</a> support.
-* **2025/08/28**, We update the RoboTwin 2.0 Paper [PDF](https://arxiv.org/pdf/2506.18088).
-* **2025/08/25**, We fix ACT deployment code and update the [leaderboard](https://robotwin-platform.github.io/leaderboard).
-* **2025/08/06**, We release RoboTwin 2.0 Leaderboard: [leaderboard website](https://robotwin-platform.github.io/leaderboard).
-* **2025/07/23**, RoboTwin 2.0 received Outstanding Poster at ChinaSI 2025 (Ranking 1st).
-* **2025/07/19**, We Fix DP3 evaluation code error. We will update RoboTwin 2.0 paper next week.
-* **2025/07/09**, We update endpose control mode, please see [[RoboTwin Doc - Usage - Control Robot](https://robotwin-platform.github.io/doc/usage/control-robot.html)] for more details.
-* **2025/07/08**, We upload [Challenge-Cup-2025](https://github.com/RoboTwin-Platform/RoboTwin/tree/Challenge-Cup-2025) Branch (第十九届挑战杯分支).
-* **2025/07/02**, Fix Piper Wrist Bug [[issue](https://github.com/RoboTwin-Platform/RoboTwin/issues/104)]. Please redownload the embodiment asset.
-* **2025/07/01**, We release Technical Report of RoboTwin Dual-Arm Collaboration Challenge @ CVPR 2025 MEIS Workshop [[arXiv](https://arxiv.org/abs/2506.23351)] !
-* **2025/06/21**, We release RoboTwin 2.0 [[Webpage](https://robotwin-platform.github.io/)] !
-* **2025/04/11**, RoboTwin is seclected as <i>CVPR Highlight paper</i>!
-* **2025/02/27**, RoboTwin is accepted to <i>CVPR 2025</i> ! 
-* **2024/09/30**, RoboTwin (Early Version) received <i>the Best Paper Award  at the ECCV Workshop</i>!
-* **2024/09/20**, Officially released RoboTwin.
+The plus patches are **drop-in replacements** that sit on top of Behnam's existing code. All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
 
-# 🛠️ Installation
+### Install
 
-See [RoboTwin 2.0 Document (Usage - Install & Download)](https://robotwin-platform.github.io/doc/usage/robotwin-install.html) for installation instructions. It takes about 20 minutes for installation.
+```bash
+# 1. Back up originals
+cp /work/behnam/RoboTwin/envs/_base_task.py /work/behnam/RoboTwin/envs/_base_task.py.bak
+cp /work/behnam/RoboTwin/envs/utils/create_actor.py /work/behnam/RoboTwin/envs/utils/create_actor.py.bak
+cp /work/behnam/RoboTwin/description/utils/generate_episode_instructions.py /work/behnam/RoboTwin/description/utils/generate_episode_instructions.py.bak
 
-# 🤷‍♂️ Tasks Informations
-See [RoboTwin 2.0 Tasks Doc](https://robotwin-platform.github.io/doc/tasks/index.html) for more details.
+# 2. Replace patched files (backward-compatible)
+cp /shared_work/markhsp/robotwin_plus/envs/_base_task.py /work/behnam/RoboTwin/envs/
+cp /shared_work/markhsp/robotwin_plus/envs/utils/create_actor.py /work/behnam/RoboTwin/envs/utils/
+cp /shared_work/markhsp/robotwin_plus/description/generate_episode_instructions.py /work/behnam/RoboTwin/description/utils/
 
-<p align="center">
-  <img src="./assets/files/50_tasks.gif" width="100%">
-</p>
+# 3. Add new YAML configs
+cp /shared_work/markhsp/robotwin_plus/task_config/demo_*_plus.yml /work/behnam/RoboTwin/task_config/
+cp /shared_work/markhsp/robotwin_plus/task_config/demo_language_r2.yml /work/behnam/RoboTwin/task_config/
+cp /shared_work/markhsp/robotwin_plus/task_config/demo_language_r3.yml /work/behnam/RoboTwin/task_config/
 
-# 🧑🏻‍💻 Usage 
-
-## Document
-
-> Please Refer to [RoboTwin 2.0 Document (Usage)](https://robotwin-platform.github.io/doc/usage/index.html) for more details.
-
-## Data Collection
-We provide over 100,000 pre-collected trajectories as part of the open-source release [RoboTwin Dataset](https://huggingface.co/datasets/TianxingChen/RoboTwin2.0/tree/main/dataset).
-However, we strongly recommend users to perform data collection themselves due to the high configurability and diversity of task and embodiment setups.
-
-<img src="./assets/files/domain_randomization.png" alt="description" style="display: block; margin: auto; width: 100%;">
-
-## 1. Task Running and Data Collection
-Running the following command will first search for a random seed for the target collection quantity, and then replay the seed to collect data.
-
-```
-bash collect_data.sh ${task_name} ${task_config} ${gpu_id}
-# Example: bash collect_data.sh beat_block_hammer demo_randomized 0
+# 4. Add pre-generated R2/R3 instruction variants (50 tasks x 50 variants)
+cp -r /shared_work/markhsp/robotwin_plus/description/task_instruction_plus/ /work/behnam/RoboTwin/description/task_instruction_plus/
 ```
 
-## 2. Modify Task Config
-☝️ See [RoboTwin 2.0 Tasks Configurations Doc](https://robotwin-platform.github.io/doc/usage/configurations.html) for more details.
+### Test the new configs
 
-# 🚴‍♂️ Policy Baselines
-## Policies Support
-[DP](https://robotwin-platform.github.io/doc/usage/DP.html), [ACT](https://robotwin-platform.github.io/doc/usage/ACT.html), [DP3](https://robotwin-platform.github.io/doc/usage/DP3.html), [RDT](https://robotwin-platform.github.io/doc/usage/RDT.html), [PI0](https://robotwin-platform.github.io/doc/usage/Pi0.html), [OpenVLA-oft](https://robotwin-platform.github.io/doc/usage/OpenVLA-oft.html)
+```bash
+cd /work/behnam/RoboTwin
 
-[TinyVLA](https://robotwin-platform.github.io/doc/usage/TinyVLA.html), [DexVLA](https://robotwin-platform.github.io/doc/usage/DexVLA.html) (Contributed by Media Group)
+# Background Plus (B1+ color tint / B2 surface material / floor)
+bash collect_data.sh beat_block_hammer demo_background_plus 0
 
-[LLaVA-VLA](https://robotwin-platform.github.io/doc/usage/LLaVA-VLA.html) (Contributed by IRPN Lab, HKUST(GZ))
+# Objects Plus (O1+ variable distractor count / O2 target pose noise)
+bash collect_data.sh beat_block_hammer demo_objects_plus 0
 
-[GO-1](https://robotwin-platform.github.io/doc/usage/GO1.html) (Contributed by GO-1 Team)
+# Sensor Noise Plus (gentler L1-L2 severity)
+bash collect_data.sh beat_block_hammer demo_vision_noise_plus 0
 
-Deploy Your Policy: [Guidance](https://robotwin-platform.github.io/doc/usage/deploy-your-policy.html)
+# Language Plus — all R1+R2+R3 together
+bash collect_data.sh beat_block_hammer demo_language_plus 0
 
-⏰ TODO: G3Flow, HybridVLA, SmolVLA, AVR, UniVLA
+# Language R2 only (common sense rewording)
+bash collect_data.sh beat_block_hammer demo_language_r2 0
 
-# 🏄‍♂️ Experiment & LeaderBoard
-
-> We recommend that the RoboTwin Platform can be used to explore the following topics: 
-> 1. single - task fine - tuning capability
-> 2. visual robustness
-> 3. language diversity robustness (language condition)
-> 4. multi-tasks capability
-> 5. cross-embodiment performance
-
-The full leaderboard and setting can be found in: [https://robotwin-platform.github.io/leaderboard](https://robotwin-platform.github.io/leaderboard).
-
-# 💽 Pre-collected Large-scale Dataset
-
-Please refer to [RoboTwin 2.0 Dataset - Huggingface](https://huggingface.co/datasets/TianxingChen/RoboTwin2.0/tree/main/dataset).
-
-# 👍 Citations
-If you find our work useful, please consider citing:
-
-<b>RoboTwin 2.0</b>: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation
-```
-@article{chen2025robotwin,
-  title={Robotwin 2.0: A scalable data generator and benchmark with strong domain randomization for robust bimanual robotic manipulation},
-  author={Chen, Tianxing and Chen, Zanxin and Chen, Baijun and Cai, Zijian and Liu, Yibin and Li, Zixuan and Liang, Qiwei and Lin, Xianliang and Ge, Yiheng and Gu, Zhenyu and others},
-  journal={arXiv preprint arXiv:2506.18088},
-  year={2025}
-}
+# Language R3 only (reasoning chain / goal state)
+bash collect_data.sh beat_block_hammer demo_language_r3 0
 ```
 
-<b>RoboTwin</b>: Dual-Arm Robot Benchmark with Generative Digital Twins, accepted to <i style="color: red; display: inline;"><b>CVPR 2025 (Highlight)</b></i>
-```
-@InProceedings{Mu_2025_CVPR,
-    author    = {Mu, Yao and Chen, Tianxing and Chen, Zanxin and Peng, Shijia and Lan, Zhiqian and Gao, Zeyu and Liang, Zhixuan and Yu, Qiaojun and Zou, Yude and Xu, Mingkun and Lin, Lunkai and Xie, Zhiqiang and Ding, Mingyu and Luo, Ping},
-    title     = {RoboTwin: Dual-Arm Robot Benchmark with Generative Digital Twins},
-    booktitle = {Proceedings of the Computer Vision and Pattern Recognition Conference (CVPR)},
-    month     = {June},
-    year      = {2025},
-    pages     = {27649-27660}
-}
+### Verify existing configs still work (regression)
+
+```bash
+bash collect_data.sh beat_block_hammer demo_clean 0
+bash collect_data.sh beat_block_hammer demo_randomized 0
+bash collect_data.sh beat_block_hammer demo_vision_noise 0
+bash collect_data.sh beat_block_hammer demo_language 0
 ```
 
-Benchmarking Generalizable Bimanual Manipulation: RoboTwin Dual-Arm Collaboration Challenge at CVPR 2025 MEIS Workshop
-```
-@article{chen2025benchmarking,
-  title={Benchmarking Generalizable Bimanual Manipulation: RoboTwin Dual-Arm Collaboration Challenge at CVPR 2025 MEIS Workshop},
-  author={Chen, Tianxing and Wang, Kaixuan and Yang, Zhaohui and Zhang, Yuhao and Chen, Zanxin and Chen, Baijun and Dong, Wanxi and Liu, Ziyuan and Chen, Dong and Yang, Tianshuo and others},
-  journal={arXiv preprint arXiv:2506.23351},
-  year={2025}
-}
-```
+### What to look for in logs
 
-<b>RoboTwin</b>: Dual-Arm Robot Benchmark with Generative Digital Twins (early version), accepted to <i style="color: red; display: inline;"><b>ECCV Workshop 2024 (Best Paper Award)</b></i>
+Each new feature prints diagnostics:
 ```
-@article{mu2024robotwin,
-  title={RoboTwin: Dual-Arm Robot Benchmark with Generative Digital Twins (early version)},
-  author={Mu, Yao and Chen, Tianxing and Peng, Shijia and Chen, Zanxin and Gao, Zeyu and Zou, Yude and Lin, Lunkai and Xie, Zhiqiang and Luo, Ping},
-  journal={arXiv preprint arXiv:2409.02920},
-  year={2024}
-}
+[B1+] Wall color tint: (0.72, 1.43, 0.55)
+[B2]  Table surface: metallic=0.45, roughness=0.62, tint=(1.12, 0.88, 0.95)
+[B1+] Floor color: (0.61, 0.42, 0.87)
+[O1+] Placing 11 distractor objects (range 3-15)
+[O2]  Perturbed 4 object poses (pos_std=0.020m, rot_max=15.0deg)
+[Sensor Noise] gaussian @ L1 (s=0.00)
+  [R2] Episode 0: 25 commonsense variants
+  [R3] Episode 0: 10 reasoning variants
 ```
 
-# 😺 Acknowledgement
+### Note on GPU
 
-**Software Support**: D-Robotics, **Hardware Support**: AgileX Robotics, **AIGC Support**: Deemos.
+`collect_data.sh` needs a GPU. On the cluster, wrap in sbatch:
 
-Contact [Tianxing Chen](https://tianxingchen.github.io) if you have any questions or suggestions.
+```bash
+#!/bin/bash
+#SBATCH --job-name=rtwplus_test
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=01:00:00
+#SBATCH --partition=compute
+#SBATCH --qos=high
+#SBATCH --output=/shared_work/markhsp/logs/rtwplus_test_%j.out
 
-# 🏷️ License
-This repository is released under the MIT license. See [LICENSE](./LICENSE) for additional details.
+export HF_HOME=/shared_work/markhsp/.cache/huggingface
+export UV_CACHE_DIR=/shared_work/markhsp/.cache/uv
+export PIP_CACHE_DIR=/shared_work/markhsp/.cache/pip
+export XDG_CACHE_HOME=/shared_work/markhsp/.cache
+
+cd /work/behnam/RoboTwin
+bash collect_data.sh beat_block_hammer demo_background_plus 0
+bash collect_data.sh beat_block_hammer demo_objects_plus 0
+bash collect_data.sh beat_block_hammer demo_vision_noise_plus 0
+bash collect_data.sh beat_block_hammer demo_language_plus 0
+```
+
+---
+
+## What the Plus Configs Add (vs Original RoboTwin)
+
+### 1. Background Plus (B1+ / B2) — `demo_background_plus.yml`
+
+Goes beyond `demo_randomized.yml` which only swaps textures from a fixed pool.
+
+| Feature | Original `demo_randomized` | **RoboTwin-Plus** |
+|---------|---------------------------|-------------------|
+| Wall texture | Random swap from seen/unseen pool | Same **+ random color tint** [0.4, 1.8] per RGB channel |
+| Table surface | Same texture swap as wall | **B2: Material randomization** — metallic [0, 0.8], roughness [0.05, 0.95], color tint |
+| Floor | Not touched | **Random floor color** [0.3, 1.0] per channel |
+
+**Code**: `_base_task.py` lines 541-590, `create_actor.py` (create_table with `surface_params`)
+**YAML keys**: `domain_randomization.background_plus.{enabled, color_tint, tint_range, surface_material, metallic_range, roughness_range, floor_texture}`
+
+### 2. Objects Plus (O1+ / O2) — `demo_objects_plus.yml`
+
+Goes beyond `demo_objects.yml` which just sets `cluttered_table: true` (fixed 10 objects, no pose noise).
+
+| Feature | Original `demo_randomized` | **RoboTwin-Plus** |
+|---------|---------------------------|-------------------|
+| Distractor count | Fixed 10 | **Random 3-15** per episode (configurable) |
+| Target object pose | Static (as loaded) | **O2: Gaussian position noise** (2cm std) + **yaw rotation** (+/-15deg) |
+
+**Code**: `_base_task.py` lines 282-297 (O1+ dispatch), 597-634 (O2 method `_apply_target_pose_perturbation`)
+**YAML keys**: `domain_randomization.object_plus.{enabled, distractor_min, distractor_max, target_pose_perturbation.{enabled, position_std, rotation_max_deg}}`
+
+**O2 details**: Perturbs all task-relevant actors (skips table/wall/ground/robot links). Position noise is x,y only (keeps z to avoid floating/clipping). Rotation is yaw-only (avoids tipping objects over).
+
+### 3. Sensor Noise Plus (N1-N5 gentler) — `demo_vision_noise_plus.yml`
+
+Same 5 noise types but with reduced severity so images stay recognizable.
+
+| Noise | Original max (L2, s=0.25) | **Plus max** (L1-L2, s=0-0.25) | Reduction |
+|-------|--------------------------|--------------------------------|-----------|
+| N1 Motion | kernel 6, sigma 2.75 | kernel **3**, sigma **1.6** | ~40% less |
+| N2 Gaussian | sigma 3.25 | sigma **1.6** | ~50% less |
+| N3 Zoom | 1.22x | **1.09x** | ~60% less |
+| N4 Fog | alpha 0.6 | alpha **0.35** | ~40% less |
+| N5 Glass | sigma 1.0, delta 2 | sigma **0.6**, delta **1** | ~40% less |
+
+**Key change**: Severity is now **YAML-configurable** via `sensor_noise_severity_min` / `sensor_noise_severity_max`. Default (when keys absent) matches Behnam's original behavior (always L2) for backward compatibility.
+
+### 4. Language Plus (R1 + R2 + R3) — `demo_language_plus.yml`
+
+Goes beyond `demo_language.yml` which only has R1 (distraction prefixes). Adds R2 and R3 following LIBERO-Plus taxonomy.
+
+| Type | What it does | Example |
+|------|-------------|---------|
+| **R1 Distraction** | Wraps instruction in irrelevant conversational context | "Hey, before we start, could you please pick up {A} and strike the block." |
+| **R2 Common Sense** | Replaces object names with functional descriptions, verb synonyms | "Seize the striking tool {A} with {a} and apply force to the rectangular solid." |
+| **R3 Reasoning Chain** | Rewrites as goal-state / outcome description | "Ensure the block has been struck using {A} held by {a}." |
+
+**Pre-generated variants**: 50 tasks x 50 variants each = **2,500 total instructions**
+- 15 R1 (distraction) per task
+- 25 R2 (common sense rewording) per task
+- 10 R3 (reasoning chain / goal state) per task
+
+Distribution follows LIBERO-Plus (~50% R2, ~30% R1, ~20% R3).
+
+**Instruction variants preserve placeholders** (`{A}`, `{B}`, `{a}`, etc.) so they get instantiated with concrete object descriptions at runtime, just like the original templates.
+
+**YAML configs**:
+- `demo_language_plus.yml` — all R1+R2+R3 generated together (`language.mode: language_plus`)
+- `demo_language_r2.yml` — R2-only ablation (`language.mode: r2`)
+- `demo_language_r3.yml` — R3-only ablation (`language.mode: r3`)
+
+**Code**: `generate_episode_instructions.py` — added `load_plus_instructions()`, R2/R3 dispatch in `generate_episode_descriptions()`, fixed `perturb_mode` bug in `__main__`
+
+---
+
+## Patched Files
+
+All in `/shared_work/markhsp/robotwin_plus/`:
+
+| File | What changed |
+|------|-------------|
+| `envs/_base_task.py` | B1+/B2 background (lines 156-164, 541-590), O1+/O2 objects (lines 166-174, 282-297, 597-634), sensor noise severity config + reduced params (lines 81-96, 801-916) |
+| `envs/utils/create_actor.py` | `create_table()` accepts `surface_params` dict for B2 material randomization |
+| `description/generate_episode_instructions.py` | R2/R3 dispatch using pre-generated variants, `load_plus_instructions()`, `save_episode_descriptions()` saves R2/R3 keys, fixed `perturb_mode` bug |
+| `description/task_instruction_plus/*.json` | **50 files** — pre-generated R1/R2/R3 instruction variants (2,500 total) |
+| `task_config/demo_background_plus.yml` | B1+/B2 ablation config |
+| `task_config/demo_objects_plus.yml` | O1+/O2 ablation config |
+| `task_config/demo_vision_noise_plus.yml` | Gentler N1-N5 with severity_min=1, severity_max=2 |
+| `task_config/demo_language_plus.yml` | R1+R2+R3 combined language perturbation |
+| `task_config/demo_language_r2.yml` | R2-only (common sense rewording) ablation |
+| `task_config/demo_language_r3.yml` | R3-only (reasoning chain) ablation |
+
+---
+
+## Full YAML Inventory
+
+**Total: 20 configs** (6 original + 8 Behnam + 6 plus)
+
+### Original/Upstream (6)
+| File | Type |
+|------|------|
+| `_embodiment_config.yml` | Internal — robot asset paths |
+| `_camera_config.yml` | Internal — camera specs |
+| `_config_template.yml` | Internal — template |
+| `_eval_step_limit.yml` | Internal — step budgets |
+| `demo_clean.yml` | Baseline (modified by Behnam) |
+| `demo_randomized.yml` | Original full DR |
+
+### Added by Behnam (8)
+| File | Perturbation |
+|------|-------------|
+| `demo_vision_noise.yml` | Sensor Noise N1-N5 |
+| `demo_light.yml` | Lighting L1-L4 |
+| `demo_camera.yml` | Camera C1-C3 |
+| `camera_viewpoints.yaml` | Camera params |
+| `demo_robot_state.yml` | Robot init state |
+| `demo_language.yml` | Language R1 |
+| `demo_background.yml` | Background B1 only |
+| `demo_objects.yml` | Objects O1 (same as randomized) |
+
+### Added by RoboTwin-Plus (6)
+| File | What's new vs original |
+|------|----------------------|
+| `demo_background_plus.yml` | B1+ color tint + B2 surface material + floor color |
+| `demo_objects_plus.yml` | O1+ variable distractor count + O2 target pose noise |
+| `demo_vision_noise_plus.yml` | Configurable severity, gentler L1-L2 defaults |
+| `demo_language_plus.yml` | R1+R2+R3 combined language perturbation |
+| `demo_language_r2.yml` | R2-only common sense rewording |
+| `demo_language_r3.yml` | R3-only reasoning chain / goal state |
+
+### Runnable ablation configs: 15
+`demo_clean`, `demo_randomized`, `demo_vision_noise`, `demo_light`, `demo_camera`, `demo_robot_state`, `demo_language`, `demo_background`, `demo_objects`, **`demo_background_plus`**, **`demo_objects_plus`**, **`demo_vision_noise_plus`**, **`demo_language_plus`**, **`demo_language_r2`**, **`demo_language_r3`**
+
+---
+
+## Merging on a Local Machine
+
+The plus patches are self-contained. To merge with Behnam's repo locally:
+
+```
+your_local_robotwin/                      # Behnam's original repo
+├── envs/
+│   ├── _base_task.py                     ← REPLACE with robotwin_plus/envs/_base_task.py
+│   └── utils/
+│       └── create_actor.py               ← REPLACE with robotwin_plus/envs/utils/create_actor.py
+├── description/
+│   ├── utils/
+│   │   └── generate_episode_instructions.py  ← REPLACE with robotwin_plus/description/generate_episode_instructions.py
+│   └── task_instruction_plus/            ← NEW DIRECTORY (copy entire folder)
+│       ├── adjust_bottle.json
+│       ├── beat_block_hammer.json
+│       └── ... (50 files total)
+└── task_config/
+    ├── demo_background_plus.yml          ← NEW
+    ├── demo_objects_plus.yml             ← NEW
+    ├── demo_vision_noise_plus.yml        ← NEW
+    ├── demo_language_plus.yml            ← NEW
+    ├── demo_language_r2.yml              ← NEW
+    └── demo_language_r3.yml              ← NEW
+```
+
+All replacements are backward-compatible — existing configs (demo_clean, demo_randomized, etc.) work identically because new features only activate when their YAML keys are present.
+
+---
+
+## Behnam's Original Modifications vs Upstream RoboTwin
+
+### Modified files (from upstream)
+
+**`envs/_base_task.py`** — all perturbation logic:
+- Sensor noise setup + application in `get_obs()` (N1-N5)
+- Lighting ablation (L1-L4) in `setup_scene()`
+- Camera viewpoint perturbation (C1-C3) after camera load
+- Robot initial state randomization
+
+**`description/utils/generate_episode_instructions.py`**:
+- `make_r1_distraction()` function + `perturb` parameter
+
+**`task_config/demo_clean.yml`** — modified from upstream:
+- NOTE: Has drifted — now has `random_head_camera_dis: 0.15` and `language.mode: r1`
+
+### Object Perturbation: demo_objects.yml vs demo_randomized.yml
+
+Original `demo_objects.yml` uses the **exact same** `get_cluttered_table()` as `demo_randomized.yml` (fixed 10 objects, same pool). It's just an isolation — everything else disabled.
+
+`demo_objects_plus.yml` goes further: variable 3-15 distractors + O2 target pose perturbation.
+
+---
+
+## References
+
+- LIBERO-Plus paper: https://arxiv.org/abs/2510.13626
+- LIBERO-Plus GitHub: https://github.com/sylvestf/LIBERO-plus
+- RoboTwin 2.0: https://robotwin-platform.github.io/
+- RoboTwin GitHub: https://github.com/TianxingChen/RoboTwin
