@@ -48,7 +48,7 @@ Each branch corresponds to one LIBERO-Plus dimension. Run any of them individual
 |---|--------|---------|---------------|
 | 1 | **Sensor Noise** (N1-N5) | `bash collect_data.sh beat_block_hammer demo_vision_noise 0` | Motion / gaussian / zoom blur, fog, glass blur — cycles one noise type per episode |
 | 2 | **Lighting** (L1-L4) | `bash collect_data.sh beat_block_hammer demo_light 0` | Diffuse tint, direction, specular, shadows — cycles one per episode |
-| 3 | **Camera** (C1-C3) | `bash collect_data.sh beat_block_hammer demo_camera 0` | Distance, spherical position, orientation perturbation |
+| 3 | **Camera** (C1+C2+C3) | `bash collect_data.sh beat_block_hammer demo_camera 0` | Distance + spherical position + orientation (combined; LIBERO-Plus tests each independently) |
 | 4 | **Robot State** | `bash collect_data.sh beat_block_hammer demo_robot_state 0` | Initial joint angle noise (Gaussian, clipped) + gripper extremes |
 | 5 | **Language** (R1+R2+R3) | `bash collect_data.sh beat_block_hammer demo_language_plus 0` | Distraction + common sense rewording + reasoning chain instructions |
 | 6 | **Background** (B1+/B2) | `bash collect_data.sh beat_block_hammer demo_background_plus 0` | Wall/floor color tint + table surface material randomization |
@@ -109,8 +109,8 @@ Applies one of 5 noise types per episode (cycled): motion blur, gaussian blur, z
 ### demo_light.yml — Lighting (L1-L4)
 Cycles through 4 lighting ablations per episode: L1 diffuse color tint, L2 directional shift, L3 specular highlights, L4 shadow manipulation.
 
-### demo_camera.yml — Camera Viewpoints (C1-C3)
-Perturbs camera placement: C1 varies distance, C2 changes spherical position, C3 rotates camera orientation. Uses `camera_viewpoints.yaml` for parameters.
+### demo_camera.yml — Camera Viewpoints (C1+C2+C3 combined)
+Applies all three camera perturbations together per episode: C1 scales distance (0.5-1.0x), C2 shifts spherical position (azimuth/elevation within 15-75° cones), C3 perturbs orientation (yaw/pitch/roll within 2-10°). Note: LIBERO-Plus tests C1, C2, C3 independently; this config applies them combined. To isolate a single sub-dimension, edit `demo_camera.yml` and set the other two to `enabled: false`.
 
 ### demo_robot_state.yml — Robot Initial State
 Adds Gaussian noise to initial joint angles (configurable std and clip range) plus random gripper extreme positions.
