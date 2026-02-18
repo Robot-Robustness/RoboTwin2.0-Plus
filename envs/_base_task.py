@@ -3,7 +3,7 @@ import re
 import sapien.core as sapien
 from sapien.render import clear_cache as sapien_clear_cache
 from sapien.utils.viewer import Viewer
-import numpy as np
+import cv2
 import gymnasium as gym
 import pdb
 import toppra as ta
@@ -11,6 +11,7 @@ import json
 import transforms3d as t3d
 from collections import OrderedDict
 import torch, random
+import numpy as np
 
 from .utils import *
 import math
@@ -59,10 +60,50 @@ class Base_Task(gym.Env):
         torch.manual_seed(kwags.get("seed", 0))
         # random.seed(kwags.get('seed', 0))
 
-        self.FRAME_IDX = 0
+
+        self.APPLY_SENSOR_NOISE    = kwags.get('apply_sensor_noise', False)
+        self.APPLY_PROBABILITY     = kwags.get('sensor_noise_probability', 1.0)
+
+        # ── Move these up so they're available early ───────────────────────
+        self.ep_num = kwags.get("now_ep_num", 0)           # <--- MOVE HERE
         self.task_name = kwags.get("task_name")
+
+        if self.APPLY_SENSOR_NOISE:
+            noise_types = ['motion', 'gaussian', 'zoom', 'fog', 'glass']
+            forced_type = kwags.get('force_sensor_noise_type', None)
+            if forced_type and forced_type in noise_types:
+                self.current_noise_type = forced_type
+            else:
+                # self.current_noise_type = np.random.choice(noise_types)
+                idx = self.ep_num % len(noise_types)
+                self.current_noise_type = noise_types[idx]
+            # self.current_noise_type = np.random.choice(noise_types)
+            # self.current_noise_type = 'glass'
+            self.current_severity   = np.random.randint(2, 3)          # L1..L5
+            self.current_s  = (self.current_severity - 1) / 4.0
+
+            if self.current_noise_type == 'zoom':
+                zoom_min = 1.00
+                zoom_max = 1.1 + self.current_s * (1.56 - 1.11)
+                self.zoom_factor = np.random.uniform(zoom_min, zoom_max)
+                print(f"Episode zoom factor FIXED: {self.zoom_factor:.3f} (range {zoom_min:.2f}–{zoom_max:.2f})")
+            else:
+                self.zoom_factor = None  # not used for other noise types
+                
+
+            print(f"Episode noise: {self.current_noise_type} @ L{self.current_severity}")
+        else:
+            self.current_noise_type = None
+
+
+
+
+
+        ###    
+        self.FRAME_IDX = 0
+        # self.task_name = kwags.get("task_name")
         self.save_dir = kwags.get("save_path", "data")
-        self.ep_num = kwags.get("now_ep_num", 0)
+        # self.ep_num = kwags.get("now_ep_num", 0)
         self.render_freq = kwags.get("render_freq", 10)
         self.data_type = kwags.get("data_type", None)
         self.save_data = kwags.get("save_data", False)
@@ -81,6 +122,30 @@ class Base_Task(gym.Env):
         self.random_light = random_setting.get("random_light", False)
         self.crazy_random_light_rate = random_setting.get("crazy_random_light_rate", 0)
         self.crazy_random_light = (0 if not self.random_light else np.random.rand() < self.crazy_random_light_rate)
+        # New: cycle through L1–L4 one by one per episode (like sensor noise)
+        self.apply_lighting_ablation = random_setting.get("apply_lighting_ablation", False)
+
+
+        # ── Camera viewpoint ablation (C1/C2/C3) ─────────────────────────────────
+        self.apply_camera_ablation = random_setting.get("apply_camera_ablation", False)
+        self.camera_perturb_config = {}
+
+        if self.apply_camera_ablation:
+            camera_cfg = random_setting.get("camera", {})
+            self.camera_perturb_config = {
+                "apply_probability": camera_cfg.get("apply_probability", 1.0),
+                "c1": camera_cfg.get("c1", {"enabled": False}),
+                "c2": camera_cfg.get("c2", {"enabled": False}),
+                "c3": camera_cfg.get("c3", {"enabled": False}),
+            }
+            print("[Camera Ablation] Using embedded config from main YAML")
+            print(f"  Prob: {self.camera_perturb_config['apply_probability']}")
+            print(f"  C1: {self.camera_perturb_config['c1']}")
+            print(f"  C2: {self.camera_perturb_config['c2']}")
+            print(f"  C3: {self.camera_perturb_config['c3']}")
+
+
+
         self.random_embodiment = random_setting.get("random_embodiment", False)  # TODO
 
         self.file_path = []
@@ -121,6 +186,65 @@ class Base_Task(gym.Env):
         self.load_robot(**kwags)
         self.load_camera(**kwags)
         self.robot.move_to_homestate()
+
+        ## applying robot state randomizations here
+
+        # ── Robot initial joint randomization (YAML-controlled) ───────────────────────
+        self.apply_robot_init_random = random_setting.get("apply_robot_init_random", False)
+
+        if self.apply_robot_init_random:
+            robot_cfg = random_setting.get("robot_init", {})
+            joint_std = robot_cfg.get("joint_std", 0.1)
+            max_clip_rad = robot_cfg.get("max_clip_rad", 0.5)
+            gripper_extreme_prob = robot_cfg.get("gripper_extreme_prob", 0.8)
+            apply_to_both = robot_cfg.get("apply_to_both_arms", True)
+
+            print(f"[Robot Init Random] Enabled | std={joint_std} rad, clip=±{max_clip_rad} rad, gripper extreme prob={gripper_extreme_prob}")
+
+            # Get home joints (as lists first)
+            left_home_list = self.robot.get_left_arm_jointState()[:-1]   # exclude gripper
+            right_home_list = self.robot.get_right_arm_jointState()[:-1]
+
+            left_home = np.array(left_home_list)
+            right_home = np.array(right_home_list)
+
+            print("Left home joints:", left_home.round(3))
+            print("Right home joints:", right_home.round(3))
+
+            # Gaussian noise
+            left_noise = np.random.normal(0, joint_std, len(left_home))
+            right_noise = np.random.normal(0, joint_std, len(right_home)) if apply_to_both else np.zeros_like(left_noise)
+
+            # Clip to allowed range
+            left_noisy = np.clip(left_home + left_noise, left_home - max_clip_rad, left_home + max_clip_rad)
+            right_noisy = np.clip(right_home + right_noise, right_home - max_clip_rad, right_home + max_clip_rad)
+
+            print("Left noisy joints:", left_noisy.round(3))
+            print("Right noisy joints:", right_noisy.round(3))
+
+            # Apply to robot
+            self.robot.set_arm_joints(left_noisy.tolist(), np.zeros(len(left_noisy)).tolist(), "left")
+            if apply_to_both:
+                self.robot.set_arm_joints(right_noisy.tolist(), np.zeros(len(right_noisy)).tolist(), "right")
+
+            # Gripper extremes (optional, controlled by prob)
+            if np.random.rand() < gripper_extreme_prob:
+                left_g = np.random.choice([0.05, 0.95])
+                right_g = np.random.choice([0.05, 0.95]) if apply_to_both else left_g
+                self.robot.set_gripper(left_g, "left")
+                if apply_to_both:
+                    self.robot.set_gripper(right_g, "right")
+                print(f"[Robot Init] Extreme grippers applied: L={left_g:.2f}, R={right_g:.2f}")
+            else:
+                print("[Robot Init] Normal grippers kept")
+
+        else:
+            print("[Robot Init Random] Disabled via YAML")
+
+
+
+
+
 
         render_freq = self.render_freq
         self.render_freq = 0
@@ -208,6 +332,7 @@ class Base_Task(gym.Env):
 
         set_global_config(max_num_materials=50000, max_num_textures=50000)
         self.renderer = sapien.SapienRenderer()
+        
         # give renderer to sapien sim
         self.engine.set_renderer(self.renderer)
 
@@ -229,29 +354,108 @@ class Base_Task(gym.Env):
             kwargs.get("dynamic_friction", 0.5),
             kwargs.get("restitution", 0),
         )
-        # give some white ambient light of moderate intensity
-        self.scene.set_ambient_light(kwargs.get("ambient_light", [0.5, 0.5, 0.5]))
-        # default enable shadow unless specified otherwise
-        shadow = kwargs.get("shadow", True)
-        # default spotlight angle and intensity
-        direction_lights = kwargs.get("direction_lights", [[[0, 0.5, -1], [0.5, 0.5, 0.5]]])
-        self.direction_light_lst = []
-        for direction_light in direction_lights:
-            if self.random_light:
-                direction_light[1] = [
-                    np.random.rand(),
-                    np.random.rand(),
-                    np.random.rand(),
-                ]
-            self.direction_light_lst.append(
-                self.scene.add_directional_light(direction_light[0], direction_light[1], shadow=shadow))
-        # default point lights position and intensity
-        point_lights = kwargs.get("point_lights", [[[1, 0, 1.8], [1, 1, 1]], [[-1, 0, 1.8], [1, 1, 1]]])
-        self.point_light_lst = []
-        for point_light in point_lights:
-            if self.random_light:
-                point_light[1] = [np.random.rand(), np.random.rand(), np.random.rand()]
-            self.point_light_lst.append(self.scene.add_point_light(point_light[0], point_light[1], shadow=shadow))
+
+
+
+        # Ambient light (base level) — fixed and moderate
+        ambient = [0.5, 0.5, 0.5]
+        self.scene.set_ambient_light(ambient)
+
+        if not self.apply_lighting_ablation:
+            print("[Lighting] Ablation disabled → using default fixed lighting")
+            # Add default directional + point lights here (no randomization)
+            direction_lights = kwargs.get("direction_lights", [[[0, 0.5, -1], [0.5, 0.5, 0.5]]])
+            self.direction_light_lst = []
+            for dl in direction_lights:
+                direction, color = dl[0], dl[1]
+                light = self.scene.add_directional_light(direction=direction, color=color, shadow=False)
+                self.direction_light_lst.append(light)
+
+            point_lights = kwargs.get("point_lights", [[[1, 0, 1.8], [1, 1, 1]], [[-1, 0, 1.8], [1, 1, 1]]])
+            self.point_light_lst = []
+            for pl in point_lights:
+                pos, color = pl[0], pl[1]
+                light = self.scene.add_point_light(pos, color, shadow=False)
+                self.point_light_lst.append(light)
+        else:
+            # ── Decide lighting independently per episode ────────────────────────────
+            apply_l1 = True                     # always ON, strong tint
+            apply_l3 = np.random.rand() < 0.5   # 50% chance specular variation
+            apply_l4 = np.random.rand() < 0.5   # 50% chance shadows ON
+            apply_l2 = apply_l4                 # L2 direction only if shadows are ON
+
+            print(f"Episode {self.ep_num} lighting:")
+            print(f"  L1 diffuse tint: {'YES (strong)' if apply_l1 else 'NO'}")
+            print(f"  L3 specular variation: {'YES' if apply_l3 else 'NO'}")
+            print(f"  L4 shadows: {'ON' if apply_l4 else 'OFF'}")
+            if apply_l2:
+                print("  L2 random direction applied (because shadows ON)")
+
+
+            # ── Directional lights ───────────────────────────────────────────────────
+            direction_lights = kwargs.get("direction_lights", [[[0, 0.5, -1], [0.5, 0.5, 0.5]]])
+            self.direction_light_lst = []
+
+            for dl in direction_lights:
+                direction = dl[0]
+                color = dl[1]
+
+                # Always apply strong L1 tint
+                if apply_l1:
+                    color = [np.random.uniform(0.0, 3.5) for _ in range(3)]  # even stronger range
+                    print(f"[L1 strong] color = {[round(c, 2) for c in color]}")
+
+                # L2: random direction only if shadows are ON
+                if apply_l2:
+                    theta = np.random.uniform(np.deg2rad(8), np.deg2rad(82))
+                    if np.random.rand() < 0.35:
+                        theta = np.random.uniform(np.deg2rad(68), np.deg2rad(82))
+                        print("[L2] dramatic side lighting mode")
+                    phi = np.random.uniform(0, 2 * np.pi)
+                    direction = [
+                        np.sin(theta) * np.cos(phi),
+                        np.sin(theta) * np.sin(phi),
+                        np.cos(theta)
+                    ]
+                    print(f"[L2 direction] θ={np.rad2deg(theta):.1f}°, φ={np.rad2deg(phi):.1f}° → "
+                        f"dir={np.round(direction, 3).tolist()}")
+
+                light = self.scene.add_directional_light(
+                    direction=direction,
+                    color=color,
+                    shadow=apply_l4  # shadows only if L4 is ON
+                )
+                self.direction_light_lst.append(light)
+
+            # ── Point lights ─────────────────────────────────────────────────────────
+            point_lights = kwargs.get("point_lights", [[[1, 0, 1.8], [1, 1, 1]], [[-1, 0, 1.8], [1, 1, 1]]])
+            self.point_light_lst = []
+
+            for pl in point_lights:
+                pos = pl[0]
+                color = pl[1]
+
+                if apply_l1:
+                    color = [np.random.uniform(0.0, 3.5) for _ in range(3)]
+
+                light = self.scene.add_point_light(pos, color, shadow=apply_l4)
+                self.point_light_lst.append(light)
+
+            # ── L3: Specular variation ───────────────────────────────────────────────
+            if apply_l3:
+                specular_strength = np.random.uniform(0.3, 6.0)
+                shininess = np.random.uniform(10, 250)
+                print(f"[L3 specular] strength={specular_strength:.2f}, shininess={shininess:.0f}")
+
+                for actor in self.scene.get_all_actors():
+                    mats = actor.get_materials() if hasattr(actor, 'get_materials') else []
+                    for mat in mats:
+                        if mat is not None:
+                            try:
+                                mat.set_specular(specular_strength)
+                                mat.set_shininess(shininess)
+                            except AttributeError:
+                                pass
 
         # initialize viewer with camera position and orientation
         if self.render_freq:
@@ -408,13 +612,21 @@ class Base_Task(gym.Env):
         self.cameras = Camera(
             bias=self.table_z_bias,
             random_head_camera_dis=self.random_head_camera_dis,
+            apply_camera_ablation=self.apply_camera_ablation,          
+            camera_perturb_config=self.camera_perturb_config,          
             **kwags,
         )
+
+        # self.cameras = Camera(
+        #     bias=self.table_z_bias,
+        #     random_head_camera_dis=self.random_head_camera_dis,
+        #     **kwags,
+        # )
+
         self.cameras.load_camera(self.scene)
         self.scene.step()  # run a physical step
         self.scene.update_render()  # sync pose from SAPIEN to renderer
 
-    # =========================================================== Sapien ===========================================================
 
     def _update_render(self):
         """
@@ -447,7 +659,149 @@ class Base_Task(gym.Env):
         pkl_dic["observation"] = self.cameras.get_config()
         # rgb
         if self.data_type.get("rgb", False):
+
             rgb = self.cameras.get_rgb()
+
+
+            # ────────────────────────────────────────────────
+            # LIBERO-Plus style sensor noise 
+            # Fixed version — corrected cv2 calls & variable order
+            # ────────────────────────────────────────────────
+
+            if self.APPLY_SENSOR_NOISE and np.random.rand() < self.APPLY_PROBABILITY:
+                for camera_name in rgb.keys():
+                    img = rgb[camera_name]['rgb'].copy()   # shape (H, W, 3) uint8
+
+                    h, w = img.shape[:2]                   # <--- define h,w FIRST
+                    noise_type = self.current_noise_type
+                    print(noise_type)
+                    s          = self.current_s
+                    severity   = self.current_severity   # only for logging if you want
+
+                    # Choose noise type + severity
+
+                    # ── 1. Motion Blur (N1) ────────────────────────────────
+                    if noise_type == 'motion':
+                        r = int(3    + s * (15 - 3))     # r: 3 → 15
+                        sigma = 1.0  + s * (8 - 1.0)         # sigma: 1.0 → 8.0
+                        angle = np.random.uniform(-30, 30)   # slightly narrower angle range
+
+                        ksize = 2 * r + 1
+                        # Correct way — no dst argument
+                        kernel_1d = cv2.getGaussianKernel(ksize, sigma, cv2.CV_32F)
+                        kernel = kernel_1d @ kernel_1d.T   # outer product
+
+                        # Rotate kernel
+                        M = cv2.getRotationMatrix2D(((ksize-1)/2, (ksize-1)/2), angle, 1.0)
+                        kernel = cv2.warpAffine(kernel, M, (ksize, ksize))
+                        kernel /= kernel.sum()   # must normalize after rotation
+
+                        img = cv2.filter2D(img, -1, kernel)
+
+                    # ── 2. Gaussian Blur (N2) ──────────────────────────────
+                    elif noise_type == 'gaussian':
+                        sigma = 1.0 + s * (10.0 - 1.0)
+                        img = cv2.GaussianBlur(img, (0, 0), sigmaX=sigma, sigmaY=sigma)
+
+                    # ── 3. Zoom Blur (N3) ──────────────────────────────────
+                    elif noise_type == 'zoom':
+                        smin = 1.00
+                        smax = 1.11 + s * (1.56 - 1.11)
+                        step = 0.01 + s * (0.03 - 0.01)
+
+                        center = (w / 2, h / 2)
+                        accum = np.zeros((h, w, 3), dtype=np.float32)
+                        count = 0.0
+
+                        scale = smin
+                        while scale <= smax + 1e-6:
+                            M = cv2.getRotationMatrix2D(center, 0, scale)
+                            tmp = cv2.warpAffine(img.astype(np.float32), M, (w, h),
+                                                flags=cv2.INTER_LINEAR,
+                                                borderMode=cv2.BORDER_REFLECT)
+                            accum += tmp
+                            count += 1
+                            scale += step
+
+                        if count > 0:
+                            img = (accum / count).clip(0, 255).astype(np.uint8)
+
+
+
+                    # # ── 3. Pure Zoom (N3) — just magnification around center, no blur ────────────────
+                    # elif noise_type == 'zoom':
+                    #     zoom_factor = self.zoom_factor  # ← use the episode-fixed value!
+                    #     # Severity scales the zoom factor (1.0 = no change, higher = more zoom-in)
+                    #     zoom_min = 1.00
+                    #     zoom_max = 1.08 + self.current_s * (1.35 - 1.08)   # ← reduced: 1.08 (L1) to 1.35 (L5)
+                    #     # zoom_factor = np.random.uniform(zoom_min, zoom_max)  # random within severity range
+
+                    #     # Compute new dimensions after zoom
+                    #     new_h = int(h * zoom_factor)
+                    #     new_w = int(w * zoom_factor)
+
+                    #     # Resize (zoom in) using INTER_LINEAR for smooth scaling
+                    #     zoomed = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+                    #     # Crop or pad back to original size, centered
+                    #     if zoom_factor > 1.0:
+                    #         # Zoomed in → crop center to original size
+                    #         start_y = (new_h - h) // 2
+                    #         start_x = (new_w - w) // 2
+                    #         img = zoomed[start_y:start_y + h, start_x:start_x + w]
+                    #     else:
+                    #         # Zoomed out (<1.0, rare but possible) → pad with reflect
+                    #         pad_top    = (h - new_h) // 2
+                    #         pad_bottom = h - new_h - pad_top
+                    #         pad_left   = (w - new_w) // 2
+                    #         pad_right  = w - new_w - pad_left
+
+                    #         img = cv2.copyMakeBorder(zoomed,
+                    #                                 pad_top, pad_bottom, pad_left, pad_right,
+                    #                                 cv2.BORDER_REFLECT)
+
+
+                    # ── 4. Fog (N4) ────────────────────────────────────────
+                    elif noise_type == 'fog':
+                        alpha = 0.3 + s * (1.5 - 0.3)
+                        # beta is not really used in simple model, but kept for reference
+
+                        fog_color = np.array([255, 255, 255], dtype=np.float32)  # white fog
+
+                        # Very simple homogeneous fog (no depth)
+                        depth = np.ones((h, w), dtype=np.float32) * 3   # fake constant depth
+                        transmission = np.exp(-alpha * depth)
+                        transmission = np.expand_dims(transmission, axis=-1)
+
+                        img_float = img.astype(np.float32)
+                        img = (img_float * transmission + fog_color * (1 - transmission))
+                        img = img.clip(0, 255).astype(np.uint8)
+
+                    # ── 5. Glass Blur (N5) ─────────────────────────────────
+                    elif noise_type == 'glass':
+                        sigma = 0.5 + s * (2.5 - 0.5)
+                        delta = int(1 + s * (5 - 1))
+                        iters = int(3 - s * (3 - 1))   # 3 → 1
+
+                        for _ in range(iters):
+                            dx = np.random.uniform(-delta, delta, (h, w)).astype(np.float32)
+                            dy = np.random.uniform(-delta, delta, (h, w)).astype(np.float32)
+
+                            map_x = np.tile(np.arange(w, dtype=np.float32), (h, 1)) + dx
+                            map_y = np.repeat(np.arange(h, dtype=np.float32)[:, None], w, axis=1) + dy
+
+                            img = cv2.remap(img, map_x, map_y,
+                                           interpolation=cv2.INTER_LINEAR,
+                                           borderMode=cv2.BORDER_REFLECT)
+
+                            if sigma > 0.01:
+                                img = cv2.GaussianBlur(img, (0, 0), sigmaX=sigma)
+
+                    # ── Save corrupted image back ──────────────────────────
+                    rgb[camera_name]['rgb'] = img
+
+
+
             for camera_name in rgb.keys():
                 pkl_dic["observation"][camera_name].update(rgb[camera_name])
 

@@ -10,7 +10,7 @@ domain_randomization:
   # ── Lighting ablation (the only active perturbation) ─────────────────────────
   apply_lighting_ablation: false           # Enables cycling through L1–L4 modes
   crazy_random_light_rate: 0.0            # Disable per-frame flicker for clean ablation
-  apply_robot_init_random: false          # main switch (true/false)
+  apply_robot_init_random: true          # main switch (true/false)
   robot_init:
     enabled: true                        # redundant but consistent with camera style
     joint_std: 0.2                       # Gaussian std in radians (~11.5° per joint)
@@ -21,13 +21,13 @@ domain_randomization:
   random_background: false
   cluttered_table: false
   clean_background_rate: 1.0
-  random_head_camera_dis: 0.15
+  random_head_camera_dis: 0.0
   random_table_height: 0.0
   random_light: false                     # Legacy flag — not needed when cycling is on
   random_embodiment: false
 language:
-  mode: r1           # or unseen, r1_distraction
-  r1_distraction_prob: 0.5
+  mode: seen          
+  r1_distraction_prob: 0
 
 camera:
   head_camera_type: D435

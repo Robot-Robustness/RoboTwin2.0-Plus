@@ -128,6 +128,9 @@ def replace_placeholders_unseen(instruction: str, episode_params: Dict[str, str]
     return instruction
 
 
+
+
+    
 def load_task_instructions(task_name: str) -> Dict[str, Any]:
     """Load the task instructions from the JSON file."""
     file_path = os.path.join(parent_directory, f"../task_instruction/{task_name}.json")
@@ -171,17 +174,19 @@ def save_episode_descriptions(task_name: str, setting: str, generated_descriptio
         episode_index = episode_desc["episode_index"]
         output_file = os.path.join(output_dir, f"episode{episode_index}.json")
 
-        with open(output_file, "w") as f:
-            json.dump(
-                {
-                    "seen": episode_desc.get("seen", []),
-                    "unseen": episode_desc.get("unseen", []),
-                },
-                f,
-                indent=2,
-            )
 
-def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000):
+        # Save only what was generated
+        save_dict = {}
+        for key in ["seen", "unseen", "r1_distraction"]:
+            if key in episode_desc:
+                save_dict[key] = episode_desc[key]
+
+        with open(output_file, "w") as f:
+            json.dump(save_dict, f, indent=2)
+
+
+# def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000):
+def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000, perturb: str = "seen"):   # ← ADD THIS
     """
     Generate descriptions for episodes by replacing placeholders in instructions with parameter values.
     For each episode, filter instructions that have matching placeholders and generate up to
@@ -195,6 +200,83 @@ def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]]
 
     # Store generated descriptions for each episode
     all_generated_descriptions = []
+
+
+
+
+    # ────────────────────────────────────────────────
+    # NEW: R1 Distraction post-processing (LIBERO-Plus style)
+    # ────────────────────────────────────────────────
+    def make_r1_distraction(base: str) -> str:
+        if not base.strip():
+            return base
+        prefixes = [
+            "Hey, before we do anything else, could you please ",
+            "Just so everything is ready, make sure to ",
+            "Quick reminder — while you're here, ",
+            "Alright, let's handle this first: ",
+            "If it's not too much trouble, would you mind to ",
+            "Before we move on or touch other things, ",
+            "So first things first, go ahead and ",
+            "To keep things organized and safe, ",
+            "Hey robot, could you please ",
+            "Quick thing — make sure to ",
+            "Hi there, go ahead and ",
+            "Before we start, please ",
+            "Hey, just do this first: ",
+            "Alright, let's handle ",
+            "Quick reminder — ",
+            "Hey robot, would you mind ",
+            "Hi, make sure to ",
+            "Before anything else, ",
+            "Hey there, please ",
+            "Let's take care of this: ",
+            "Quick note — go ahead and ",
+            "Hello, could you ",
+            "Hey robot, first off ",
+            "Hi there, just make sure ",
+            "Before we move on, ",
+            "Alright, please do ",
+            "Hey, one small step — ",
+            "Quick check — ",
+            "Hi robot, go for it: ",
+            "Hey there, would you please ",
+            "Hello, make sure to ",
+            "Before we continue, ",
+            "Hey robot, how are you doing? Could you ",
+            "Quick hello — please ",
+            "Hi, let's do this: ",
+            "Hey, before we get going, ",
+            "Alright, first thing — ",
+            "Hello there, go ahead and ",
+            "Hey robot, everything good? Then please ",
+            "Quick reminder, make sure to ",
+            "Hi there, could you please ",
+            "Before the next step, ",
+            "Hey, just this one thing: ",
+            "Hello, would you mind to ",
+            "Quick note — ",
+            "Hey robot, hope you're running smoothly — go ahead and ",
+            "Hi, please make sure ",
+            "Alright, let's start with ",
+            "Hey there, before we do more, ",
+            "Hello, quick task — ",
+            "Hey robot, all set? Then ",
+            "Quick check-in — please ",
+            "Hi there, make sure to ",
+            "Before anything else happens, ",
+            "Hey, one moment — could you ",
+            "Hello robot, feeling ready? If so, ",
+            "Quick thing before we continue — ",
+            "Hey robot, good to see you — please "
+
+        ]
+        p = random.choice(prefixes)
+        instr_lower = base[0].lower() + base[1:] 
+        return p + instr_lower
+    # ────────────────────────────────────────────────
+
+
 
     # Process each episode
     for i, episode in enumerate(episodes):
@@ -229,11 +311,38 @@ def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]]
                 description = replace_placeholders_unseen(instruction, episode)
                 unseen_episode_descriptions.append(description)
 
-        all_generated_descriptions.append({
+        # all_generated_descriptions.append({
+        #     "episode_index": i,
+        #     "seen": seen_episode_descriptions,
+        #     "unseen": unseen_episode_descriptions,
+        # })
+
+        episode_dict = {
             "episode_index": i,
             "seen": seen_episode_descriptions,
             "unseen": unseen_episode_descriptions,
-        })
+        }
+
+
+
+
+        # ────────────────────────────────────────────────
+        # NEW: if perturb == "r1", add distraction versions
+        # ────────────────────────────────────────────────
+        if perturb == "r1":
+            r1_list = []
+            base_pool = unseen_episode_descriptions if unseen_episode_descriptions else seen_episode_descriptions
+            random.shuffle(base_pool)
+            for base in base_pool:
+                if len(r1_list) >= max_descriptions:
+                    break
+                r1_list.append(make_r1_distraction(base))
+            episode_dict["r1_distraction"] = r1_list
+        # ────────────────────────────────────────────────
+
+        all_generated_descriptions.append(episode_dict)
+
+
 
     return all_generated_descriptions
 
@@ -269,7 +378,7 @@ if __name__ == "__main__":
     episodes = extract_episodes_from_scene_info(scene_info)
 
     # Generate descriptions
-    results = generate_episode_descriptions(args.task_name, episodes, args.max_num)
+    results = generate_episode_descriptions(args.task_name, episodes, args.max_num, perturb=perturb_mode)
 
     # Save results to output files
     save_episode_descriptions(args.task_name, args.setting, results)

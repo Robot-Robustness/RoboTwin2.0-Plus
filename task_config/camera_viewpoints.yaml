@@ -1,0 +1,21 @@
+apply_camera_ablation: true
+apply_probability: 1.0               # Overall chance — set <1.0 to have some clean episodes
+
+c1:                                 # Camera Distance (along optical axis)
+  enabled: true
+  prob: 0.4                         # ~40% chance
+  min_scale: 1.01
+  max_scale: 2.00
+
+c2:                                 # Spherical Position
+  enabled: true
+  prob: 0.4
+  azimuth_cone_deg: [15, 75]
+  elevation_cone_deg: [15, 75]
+  distance_variation: 0.1           # ±10% distance noise
+
+c3:                                 # Camera Orientation (fixed position)
+  enabled: true
+  prob: 0.4
+  max_angle_deg: 10
+  min_angle_deg: 2                  # Avoid tiny/no-op perturbations

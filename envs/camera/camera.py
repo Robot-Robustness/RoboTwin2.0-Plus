@@ -44,6 +44,11 @@ class Camera:
 
     def __init__(self, bias=0, random_head_camera_dis=0, **kwags):
         """ """
+
+        # NEW: receive ablation flags from env
+        self.apply_camera_ablation = kwags.get("apply_camera_ablation", False)
+        self.camera_perturb_config = kwags.get("camera_perturb_config", {})
+        #####
         self.pcd_crop = kwags.get("pcd_crop", False)
         self.pcd_down_sample_num = kwags.get("pcd_down_sample_num", 0)
         self.pcd_crop_bbox = kwags.get("bbox", [[-0.6, -0.35, 0.7401], [0.6, 0.35, 2]])
@@ -89,7 +94,7 @@ class Camera:
         # sensor_mount_actor = scene.create_actor_builder().build_kinematic()
 
         # camera_args = get_camera_config()
-        def create_camera(camera_info, random_head_camera_dis=0):
+        def create_camera(camera_info, random_head_camera_dis=0, camera_ablation_cfg=None):
             if camera_info["type"] not in camera_args.keys():
                 raise ValueError(f"Camera type {camera_info['type']} not supported")
 
@@ -98,16 +103,94 @@ class Camera:
             vector = np.random.randn(3)
             random_dir = vector / np.linalg.norm(vector)
             cam_pos = cam_pos + random_dir * np.random.uniform(low=0, high=random_head_camera_dis)
+            #### new codes
+            # NEW: Structured ablation C1/C2/C3 (overrides jitter if enabled)
+            if camera_ablation_cfg is not None and camera_info["name"] == "head_camera":
+                cfg = camera_ablation_cfg
+                print(f"[Ablation] Applying C1/C2/C3 to {camera_info['name']}")
+
+                scene_center = np.array([0.0, 0.0, self.table_z_bias + 0.74 / 2])
+                orig_p = cam_pos.copy()
+                orig_dist = np.linalg.norm(orig_p - scene_center) + 1e-8
+                orig_dir = (orig_p - scene_center) / orig_dist
+
+                do_c1 = cfg.get("c1", {}).get("enabled", False) and np.random.rand() < cfg.get("c1", {}).get("prob", 0.0)
+                do_c2 = cfg.get("c2", {}).get("enabled", False) and np.random.rand() < cfg.get("c2", {}).get("prob", 0.0)
+                do_c3 = cfg.get("c3", {}).get("enabled", False) and np.random.rand() < cfg.get("c3", {}).get("prob", 0.0)
+
+                print(f"  → C1={do_c1}, C2={do_c2}, C3={do_c3}")
+
+                new_p = orig_p.copy()
+                new_forward = cam_forward.copy()
+                new_left = cam_left.copy()
+                new_up = up.copy()
+
+                if do_c1:
+                    scale = np.random.uniform(cfg["c1"]["min_scale"], cfg["c1"]["max_scale"])
+                    new_dist = orig_dist * scale
+                    new_p = scene_center + orig_dir * new_dist
+                    print(f"  [C1] Distance ×{scale:.2f} → {new_dist:.3f}m")
+
+                if do_c2:
+                    az_delta = np.random.uniform(-cfg["c2"]["azimuth_cone_deg"][1], cfg["c2"]["azimuth_cone_deg"][1])
+                    el_delta = np.random.uniform(-cfg["c2"]["elevation_cone_deg"][1], cfg["c2"]["elevation_cone_deg"][1])
+
+                    rot_az = t3d.axangles.axangle2mat([0, 1, 0], np.deg2rad(az_delta))
+                    new_dir = rot_az @ orig_dir
+
+                    horiz_axis = np.cross([0, 1, 0], new_dir)
+                    horiz_axis /= np.linalg.norm(horiz_axis) + 1e-8
+                    rot_el = t3d.axangles.axangle2mat(horiz_axis, np.deg2rad(el_delta))
+                    new_dir = rot_el @ new_dir
+
+                    dist_var = cfg["c2"].get("distance_variation", 0.0)
+                    new_dist = orig_dist * np.random.uniform(1 - dist_var, 1 + dist_var)
+                    new_p = scene_center + new_dir * new_dist
+
+                    new_forward = new_dir
+                    new_left = np.cross([0, 0, 1], new_forward)
+                    new_left /= np.linalg.norm(new_left) + 1e-8
+                    new_up = np.cross(new_forward, new_left)
+
+                    print(f"  [C2] ∆Az {az_delta:.1f}°, ∆El {el_delta:.1f}° → dist {new_dist:.3f}m")
+
+                if do_c3:
+                    max_ang = cfg["c3"]["max_angle_deg"]
+                    min_ang = cfg["c3"].get("min_angle_deg", 0.0)
+
+                    def sample():
+                        a = np.random.uniform(min_ang, max_ang)
+                        return a if np.random.rand() < 0.5 else -a
+
+                    yaw = sample()
+                    pitch = sample()
+                    roll = sample()
+
+                    rot_yaw = t3d.axangles.axangle2mat([0, 1, 0], np.deg2rad(yaw))
+                    rot_pitch = t3d.axangles.axangle2mat([1, 0, 0], np.deg2rad(pitch))
+                    rot_roll = t3d.axangles.axangle2mat([0, 0, 1], np.deg2rad(roll))
+
+                    orig_rot = np.stack([new_forward, new_left, new_up], axis=1)
+                    new_rot = rot_yaw @ rot_pitch @ rot_roll @ orig_rot
+
+                    new_forward = new_rot[:, 0] / (np.linalg.norm(new_rot[:, 0]) + 1e-8)
+                    new_left = new_rot[:, 1] / (np.linalg.norm(new_rot[:, 1]) + 1e-8)
+                    new_up = new_rot[:, 2] / (np.linalg.norm(new_rot[:, 2]) + 1e-8)
+
+                    print(f"  [C3] Y/P/R ∆: {yaw:.1f}° / {pitch:.1f}° / {roll:.1f}°")
+
+                cam_pos = new_p
+                cam_forward = new_forward
+                cam_left = new_left
+                up = new_up
+
+            # Original forward/left/up (use updated ones if ablation applied)
             cam_forward = np.array(camera_info["forward"]) / np.linalg.norm(np.array(camera_info["forward"]))
             cam_left = np.array(camera_info["left"]) / np.linalg.norm(np.array(camera_info["left"]))
             up = np.cross(cam_forward, cam_left)
             mat44 = np.eye(4)
             mat44[:3, :3] = np.stack([cam_forward, cam_left, up], axis=1)
             mat44[:3, 3] = cam_pos
-
-            # ========================= sensor camera =========================
-            # sensor_config = StereoDepthSensorConfig()
-            # sensor_config.rgb_resolution = (camera_config['w'], camera_config['h'])
 
             camera = scene.add_camera(
                 name=camera_info["name"],
@@ -119,15 +202,38 @@ class Camera:
             )
             camera.entity.set_pose(sapien.Pose(mat44))
 
-            # ========================= sensor camera =========================
-            # sensor_camera = StereoDepthSensor(
-            #     sensor_config,
-            #     sensor_mount_actor,
-            #     sapien.Pose(mat44)
-            # )
-            # camera.entity.set_pose(sapien.Pose(camera_info['position']))
-            # return camera, sensor_camera, camera_config
             return camera, camera_config
+
+            # cam_forward = np.array(camera_info["forward"]) / np.linalg.norm(np.array(camera_info["forward"]))
+            # cam_left = np.array(camera_info["left"]) / np.linalg.norm(np.array(camera_info["left"]))
+            # up = np.cross(cam_forward, cam_left)
+            # mat44 = np.eye(4)
+            # mat44[:3, :3] = np.stack([cam_forward, cam_left, up], axis=1)
+            # mat44[:3, 3] = cam_pos
+
+            # # ========================= sensor camera =========================
+            # # sensor_config = StereoDepthSensorConfig()
+            # # sensor_config.rgb_resolution = (camera_config['w'], camera_config['h'])
+
+            # camera = scene.add_camera(
+            #     name=camera_info["name"],
+            #     width=camera_config["w"],
+            #     height=camera_config["h"],
+            #     fovy=np.deg2rad(camera_config["fovy"]),
+            #     near=near,
+            #     far=far,
+            # )
+            # camera.entity.set_pose(sapien.Pose(mat44))
+
+            # # ========================= sensor camera =========================
+            # # sensor_camera = StereoDepthSensor(
+            # #     sensor_config,
+            # #     sensor_mount_actor,
+            # #     sapien.Pose(mat44)
+            # # )
+            # # camera.entity.set_pose(sapien.Pose(camera_info['position']))
+            # # return camera, sensor_camera, camera_config
+            # return camera, camera_config
 
         # ================================= wrist camera =================================
         if self.collect_wrist_camera:

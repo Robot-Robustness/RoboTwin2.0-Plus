@@ -1,0 +1,56 @@
+# demo_lighting.yaml
+
+
+render_freq: 0                  # No viewer overhead during data collection
+episode_num: 50                 # How many episodes to run (adjust as needed)
+use_seed: false                 # Let code handle seeding via ep_num / np.random.seed
+save_freq: 15                   # Save frame every 15 steps (good balance)
+
+embodiment: [aloha-agilex]
+language_num: 100
+
+domain_randomization:
+  # ── Lighting ablation (the only active perturbation) ─────────────────────────
+  apply_lighting_ablation: true           # Enables cycling through L1–L4 modes
+  crazy_random_light_rate: 0.0            # Disable per-frame flicker for clean ablation
+
+  # All other randomizations turned off for pure lighting isolation
+  random_background: false
+  cluttered_table: false
+  clean_background_rate: 1.0
+  random_head_camera_dis: 0
+  random_table_height: 0.0
+  random_light: false                     # Legacy flag — not needed when cycling is on
+  random_embodiment: false
+
+# Optional: force one specific lighting mode for debugging / focused runs
+# lighting_mode: l1_diffuse             # uncomment to override cycling
+
+# Camera settings
+camera:
+  head_camera_type: D435
+  wrist_camera_type: D435
+  collect_head_camera: true
+  collect_wrist_camera: true
+
+# What data to collect (minimal but useful for vision training/eval)
+data_type:
+  rgb: true                     # Main RGB images (affected by lighting)
+  third_view: false
+  depth: false
+  pointcloud: false
+  observer: false
+  endpose: true                 # Useful for evaluation
+  qpos: true                    # Joint states
+  mesh_segmentation: false
+  actor_segmentation: false
+
+pcd_down_sample_num: 1024
+pcd_crop: true
+save_path: ./data/lighting_ablation   # Separate subfolder so it doesn't mix with other demos
+clear_cache_freq: 5
+collect_data: true
+eval_video_log: true                  # Generate mp4 previews
+
+eval_mode: true
+need_plan: true

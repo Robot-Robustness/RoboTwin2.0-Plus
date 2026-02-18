@@ -1,0 +1,79 @@
+# demo_camera.yml
+
+
+render_freq: 0
+episode_num: 50
+use_seed: false
+save_freq: 15
+
+embodiment: [aloha-agilex]
+language_num: 100
+
+domain_randomization:
+  random_head_camera_dis: 0.15
+
+  # ── Camera viewpoint ablation ────────────────────────────────────────────────
+  apply_camera_ablation: false
+  # All C1/C2/C3 parameters are now embedded here (no separate file needed)
+  camera:
+    apply_camera_ablation: false   # ← add this line
+
+    apply_probability: 1.0           # chance to perturb at all (set <1.0 for some clean episodes)
+
+    c1:                             # Distance scaling
+      enabled: true
+      prob: 1
+      min_scale: 0.5
+      max_scale: 1
+
+    c2:                             # Spherical position (azimuth + elevation)
+      enabled: true
+      prob: 0
+      azimuth_cone_deg: [15, 75]
+      elevation_cone_deg: [15, 75]
+      distance_variation: 0.1       # ±10% distance noise during C2
+
+    c3:                             # Orientation only
+      enabled: true
+      prob: 0
+      max_angle_deg: 10
+      min_angle_deg: 2
+
+  # Disable everything else for pure camera ablation
+  apply_lighting_ablation: false
+  random_background: false
+  cluttered_table: false
+  clean_background_rate: 1.0
+  random_table_height: 0.0
+  random_light: false
+  crazy_random_light_rate: 0.0
+  random_embodiment: false
+
+# Camera hardware
+camera:
+  head_camera_type: D435
+  wrist_camera_type: D435
+  collect_head_camera: true
+  collect_wrist_camera: true
+
+# Data collection (RGB is most affected by viewpoint changes)
+data_type:
+  rgb: true
+  third_view: false
+  depth: false
+  pointcloud: false
+  observer: false
+  endpose: true
+  qpos: true
+  mesh_segmentation: false
+  actor_segmentation: false
+
+pcd_down_sample_num: 1024
+pcd_crop: true
+save_path: ./data/camera_viewpoints_ablation   # Dedicated folder
+clear_cache_freq: 5
+collect_data: true
+eval_video_log: true
+
+eval_mode: true
+need_plan: true
