@@ -10,32 +10,30 @@ embodiment: [aloha-agilex]
 language_num: 100
 
 domain_randomization:
-  random_head_camera_dis: 0.15
+  random_head_camera_dis: 0.0
 
   # ── Camera viewpoint ablation ────────────────────────────────────────────────
-  apply_camera_ablation: false
-  # All C1/C2/C3 parameters are now embedded here (no separate file needed)
+  apply_camera_ablation: true
+  # All C1/C2/C3 parameters are embedded here (no separate file needed)
   camera:
-    apply_camera_ablation: false   # ← add this line
-
     apply_probability: 1.0           # chance to perturb at all (set <1.0 for some clean episodes)
 
     c1:                             # Distance scaling
       enabled: true
-      prob: 1
+      prob: 1.0
       min_scale: 0.5
-      max_scale: 1
+      max_scale: 1.0
 
     c2:                             # Spherical position (azimuth + elevation)
       enabled: true
-      prob: 0
+      prob: 1.0
       azimuth_cone_deg: [15, 75]
       elevation_cone_deg: [15, 75]
       distance_variation: 0.1       # ±10% distance noise during C2
 
     c3:                             # Orientation only
       enabled: true
-      prob: 0
+      prob: 1.0
       max_angle_deg: 10
       min_angle_deg: 2
 
