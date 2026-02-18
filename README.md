@@ -10,7 +10,7 @@ LIBERO-Plus defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 diff
 
 | Dimension | Sub-dims | Codes | Description |
 |-----------|----------|-------|-------------|
-| **Objects Layout** | 2 | O1, O2 | O1: confounding/distractor objects (416 unseen objects); O2: target object pose perturbation |
+| **Objects Layout** | 2 | O1, O2 | O1: confounding/distractor objects (117 object types); O2: target object pose perturbation |
 | **Background Textures** | 2 | B1, B2 | B1: scene theme (950 curated textures); B2: surface/tabletop appearance |
 | **Light Conditions** | 4 | L1-L4 | L1: diffuse color; L2: direction; L3: specular; L4: shadows |
 | **Camera Viewpoints** | 3 | C1-C3 | C1: distance; C2: spherical position; C3: orientation |
