@@ -110,7 +110,7 @@ Applies one of 5 noise types per episode (cycled): motion blur, gaussian blur, z
 Randomly combines lighting perturbations per episode: L1 diffuse color tint (always on), L2 directional shift (linked to L4), L3 specular highlights (50% chance), L4 shadow manipulation (50% chance). Each episode gets a random mix of these modes.
 
 ### demo_camera.yml — Camera Viewpoints (C1+C2+C3 combined)
-Applies all three camera perturbations together per episode: C1 scales distance (0.5-1.0x), C2 shifts spherical position (azimuth/elevation up to ±75°), C3 perturbs orientation (yaw/pitch/roll within 2-10°). Note: LIBERO-Plus tests C1, C2, C3 independently; this config applies them combined. To isolate a single sub-dimension, edit `demo_camera.yml` and set the other two to `enabled: false`.
+Applies all three camera perturbations together per episode: C1 scales distance (0.5-1.0x), C2 shifts spherical position (azimuth/elevation up to ±25°), C3 perturbs orientation (yaw/pitch/roll within 1-5°). Note: LIBERO-Plus tests C1, C2, C3 independently; this config applies them combined. To isolate a single sub-dimension, edit `demo_camera.yml` and set the other two to `enabled: false`.
 
 ### demo_robot_state.yml — Robot Initial State
 Adds Gaussian noise to initial joint angles (configurable std and clip range) plus random gripper extreme positions.

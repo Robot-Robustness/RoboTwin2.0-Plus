@@ -25,15 +25,15 @@ domain_randomization:
     c2:                             # Spherical position (azimuth + elevation)
       enabled: true
       prob: 1.0
-      azimuth_cone_deg: [15, 75]
-      elevation_cone_deg: [15, 75]
+      azimuth_cone_deg: [5, 25]
+      elevation_cone_deg: [5, 25]
       distance_variation: 0.1       # ±10% distance noise during C2
 
     c3:                             # Orientation only
       enabled: true
       prob: 1.0
-      max_angle_deg: 10
-      min_angle_deg: 2
+      max_angle_deg: 5
+      min_angle_deg: 1
 
   # Disable everything else for pure camera ablation
   apply_lighting_ablation: false
