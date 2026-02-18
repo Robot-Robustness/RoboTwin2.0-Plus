@@ -139,6 +139,25 @@ def load_task_instructions(task_name: str) -> Dict[str, Any]:
     return task_data
 
 
+# ────────────────────────────────────────────────
+# RoboTwin-Plus: Load pre-generated R2/R3 instruction variants
+# ────────────────────────────────────────────────
+def load_plus_instructions(task_name: str) -> Dict[str, Any]:
+    """Load pre-generated R1/R2/R3 instruction variants from task_instruction_plus/."""
+    # Look relative to this file's parent (description/utils/) -> description/task_instruction_plus/
+    # Also check the robotwin_plus directory structure
+    candidates = [
+        os.path.join(parent_directory, f"../task_instruction_plus/{task_name}.json"),
+        os.path.join(parent_directory, f"../../task_instruction_plus/{task_name}.json"),
+    ]
+    for file_path in candidates:
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                return json.load(f)
+    print(f"[Language Plus] WARNING: No plus instructions found for '{task_name}'")
+    return {}
+
+
 def load_scene_info(task_name: str, setting: str, scene_info_path: str) -> Dict[str, Dict]:
     """Load the scene info from the JSON file in the data directory."""
     file_path = os.path.join(parent_directory, f"../../{scene_info_path}/{task_name}/{setting}/scene_info.json")
@@ -177,7 +196,7 @@ def save_episode_descriptions(task_name: str, setting: str, generated_descriptio
 
         # Save only what was generated
         save_dict = {}
-        for key in ["seen", "unseen", "r1_distraction"]:
+        for key in ["seen", "unseen", "r1_distraction", "r2_commonsense", "r3_reasoning"]:
             if key in episode_desc:
                 save_dict[key] = episode_desc[key]
 
@@ -340,6 +359,59 @@ def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]]
             episode_dict["r1_distraction"] = r1_list
         # ────────────────────────────────────────────────
 
+        # ────────────────────────────────────────────────
+        # RoboTwin-Plus: R2 (common sense) and R3 (reasoning chain)
+        # Uses pre-generated instruction variants from task_instruction_plus/
+        # ────────────────────────────────────────────────
+        if perturb in ("r2", "r3", "r1r2r3", "language_plus"):
+            plus_data = load_plus_instructions(task_name)
+            if plus_data:
+                # R1 distraction: use pre-generated variants, instantiate placeholders
+                if perturb in ("r1", "r1r2r3", "language_plus"):
+                    r1_templates = plus_data.get("r1_distraction", [])
+                    if r1_templates:
+                        r1_filtered = filter_instructions(r1_templates, episode)
+                        r1_descs = []
+                        for tmpl in r1_filtered:
+                            if len(r1_descs) >= max_descriptions:
+                                break
+                            r1_descs.append(replace_placeholders_unseen(tmpl, episode))
+                        if not r1_descs:
+                            # Fallback: use runtime R1 generation
+                            base_pool = unseen_episode_descriptions if unseen_episode_descriptions else seen_episode_descriptions
+                            for base in base_pool[:max_descriptions]:
+                                r1_descs.append(make_r1_distraction(base))
+                        episode_dict["r1_distraction"] = r1_descs
+
+                # R2 commonsense: use pre-generated variants, instantiate placeholders
+                if perturb in ("r2", "r1r2r3", "language_plus"):
+                    r2_templates = plus_data.get("r2_commonsense", [])
+                    if r2_templates:
+                        r2_filtered = filter_instructions(r2_templates, episode)
+                        r2_descs = []
+                        for tmpl in r2_filtered:
+                            if len(r2_descs) >= max_descriptions:
+                                break
+                            r2_descs.append(replace_placeholders_unseen(tmpl, episode))
+                        episode_dict["r2_commonsense"] = r2_descs
+                        if r2_descs:
+                            print(f"  [R2] Episode {i}: {len(r2_descs)} commonsense variants")
+
+                # R3 reasoning: use pre-generated variants, instantiate placeholders
+                if perturb in ("r3", "r1r2r3", "language_plus"):
+                    r3_templates = plus_data.get("r3_reasoning", [])
+                    if r3_templates:
+                        r3_filtered = filter_instructions(r3_templates, episode)
+                        r3_descs = []
+                        for tmpl in r3_filtered:
+                            if len(r3_descs) >= max_descriptions:
+                                break
+                            r3_descs.append(replace_placeholders_unseen(tmpl, episode))
+                        episode_dict["r3_reasoning"] = r3_descs
+                        if r3_descs:
+                            print(f"  [R3] Episode {i}: {len(r3_descs)} reasoning variants")
+        # ────────────────────────────────────────────────
+
         all_generated_descriptions.append(episode_dict)
 
 
@@ -376,6 +448,10 @@ if __name__ == "__main__":
     # Load scene info and extract episode parameters
     scene_info = load_scene_info(args.task_name, args.setting, args_dict['save_path'])
     episodes = extract_episodes_from_scene_info(scene_info)
+
+    # RoboTwin-Plus: read language mode from YAML config
+    language_config = args_dict.get("language", {})
+    perturb_mode = language_config.get("mode", "seen") if isinstance(language_config, dict) else "seen"
 
     # Generate descriptions
     results = generate_episode_descriptions(args.task_name, episodes, args.max_num, perturb=perturb_mode)

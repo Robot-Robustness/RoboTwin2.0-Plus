@@ -148,6 +148,26 @@ class Base_Task(gym.Env):
 
         self.random_embodiment = random_setting.get("random_embodiment", False)  # TODO
 
+        # ── RoboTwin-Plus: Enhanced background perturbation (B1+B2) ──────────
+        bg_plus = random_setting.get("background_plus", {})
+        self.bg_plus_enabled = bg_plus.get("enabled", False)
+        self.bg_plus_color_tint = bg_plus.get("color_tint", True)
+        self.bg_plus_tint_range = bg_plus.get("tint_range", [0.5, 1.5])
+        self.bg_plus_surface_material = bg_plus.get("surface_material", True)
+        self.bg_plus_metallic_range = bg_plus.get("metallic_range", [0.0, 0.8])
+        self.bg_plus_roughness_range = bg_plus.get("roughness_range", [0.05, 0.95])
+        self.bg_plus_floor_texture = bg_plus.get("floor_texture", True)
+
+        # ── RoboTwin-Plus: Object perturbation (O1 enhanced + O2 target pose) ─
+        obj_plus = random_setting.get("object_plus", {})
+        self.obj_plus_enabled = obj_plus.get("enabled", False)
+        self.obj_plus_distractor_min = obj_plus.get("distractor_min", 3)
+        self.obj_plus_distractor_max = obj_plus.get("distractor_max", 15)
+        self.obj_plus_target_pose = obj_plus.get("target_pose_perturbation", {})
+        self.obj_plus_target_pos_std = self.obj_plus_target_pose.get("position_std", 0.02)
+        self.obj_plus_target_rot_deg = self.obj_plus_target_pose.get("rotation_max_deg", 15)
+        self.obj_plus_target_pose_enabled = self.obj_plus_target_pose.get("enabled", False)
+
         self.file_path = []
         self.plan_success = True
         self.step_lim = None
@@ -254,8 +274,24 @@ class Base_Task(gym.Env):
         self.robot.set_origin_endpose()
         self.load_actors()
 
+        # ── RoboTwin-Plus O2: target object pose perturbation ────────────────
+        #    After load_actors(), perturb the initial poses of task-relevant
+        #    objects (everything except table/wall/ground/robot links).
+        if self.obj_plus_enabled and self.obj_plus_target_pose_enabled:
+            self._apply_target_pose_perturbation()
+
         if self.cluttered_table:
-            self.get_cluttered_table()
+            # ── RoboTwin-Plus O1: difficulty-scaled distractor count ──────────
+            if self.obj_plus_enabled:
+                n_distractors = np.random.randint(
+                    self.obj_plus_distractor_min,
+                    self.obj_plus_distractor_max + 1
+                )
+                print(f"[O1+] Placing {n_distractors} distractor objects "
+                      f"(range {self.obj_plus_distractor_min}-{self.obj_plus_distractor_max})")
+                self.get_cluttered_table(cluttered_numbers=n_distractors)
+            else:
+                self.get_cluttered_table()
 
         is_stable, unstable_list = self.check_stable()
         if not is_stable:
@@ -497,15 +533,36 @@ class Base_Task(gym.Env):
         else:
             self.wall_texture, self.table_texture = None, None
 
+        # ── RoboTwin-Plus B1: wall color tint (harder than plain texture swap) ──
+        wall_color = (1, 0.9, 0.9)
+        if self.bg_plus_enabled and self.bg_plus_color_tint:
+            lo, hi = self.bg_plus_tint_range
+            wall_color = tuple(np.random.uniform(lo, hi) for _ in range(3))
+            print(f"[B1+] Wall color tint: ({wall_color[0]:.2f}, {wall_color[1]:.2f}, {wall_color[2]:.2f})")
+
         self.wall = create_box(
             self.scene,
             sapien.Pose(p=[0, 1, 1.5]),
             half_size=[3, 0.6, 1.5],
-            color=(1, 0.9, 0.9),
+            color=wall_color,
             name="wall",
             texture_id=self.wall_texture,
             is_static=True,
         )
+
+        # ── RoboTwin-Plus B2: table surface material randomization ───────────
+        #    Goes beyond texture swap — randomizes metallic/roughness/color of
+        #    the tabletop, creating unseen material appearances.
+        table_surface_params = None
+        if self.bg_plus_enabled and self.bg_plus_surface_material:
+            table_surface_params = {
+                "metallic": np.random.uniform(*self.bg_plus_metallic_range),
+                "roughness": np.random.uniform(*self.bg_plus_roughness_range),
+                "color_tint": tuple(np.random.uniform(*self.bg_plus_tint_range) for _ in range(3)),
+            }
+            print(f"[B2] Table surface: metallic={table_surface_params['metallic']:.2f}, "
+                  f"roughness={table_surface_params['roughness']:.2f}, "
+                  f"tint={tuple(round(c, 2) for c in table_surface_params['color_tint'])}")
 
         self.table = create_table(
             self.scene,
@@ -516,7 +573,63 @@ class Base_Task(gym.Env):
             thickness=0.05,
             is_static=True,
             texture_id=self.table_texture,
+            surface_params=table_surface_params,
         )
+
+        # ── RoboTwin-Plus B1: floor texture randomization ────────────────────
+        if self.bg_plus_enabled and self.bg_plus_floor_texture:
+            floor_color = tuple(np.random.uniform(0.3, 1.0) for _ in range(3))
+            self.ground = create_box(
+                self.scene,
+                sapien.Pose(p=[0, 0, -0.01]),
+                half_size=[3, 3, 0.01],
+                color=floor_color,
+                name="ground",
+                is_static=True,
+            )
+            print(f"[B1+] Floor color: ({floor_color[0]:.2f}, {floor_color[1]:.2f}, {floor_color[2]:.2f})")
+
+    # ── RoboTwin-Plus O2: target object pose perturbation ──────────────────
+    def _apply_target_pose_perturbation(self):
+        """
+        Perturb the initial pose of task-relevant objects (LIBERO-Plus O2).
+        Adds Gaussian noise to position and random rotation to orientation,
+        while keeping objects on the table surface.
+        """
+        skip_names = {"table", "wall", "ground", ""}
+        pos_std = self.obj_plus_target_pos_std
+        rot_max = np.deg2rad(self.obj_plus_target_rot_deg)
+        perturbed_count = 0
+
+        for actor in self.scene.get_all_actors():
+            name = actor.get_name()
+            # Skip scene furniture, unnamed actors, and robot links
+            if name in skip_names:
+                continue
+            if name.startswith("link") or name.startswith("base"):
+                continue
+
+            pose = actor.get_pose()
+            p = np.array(pose.p)
+            q = np.array(pose.q)
+
+            # Position perturbation: Gaussian noise in x,y; keep z unchanged
+            # to avoid objects floating or clipping through table
+            dx = np.random.normal(0, pos_std)
+            dy = np.random.normal(0, pos_std)
+            new_p = [p[0] + dx, p[1] + dy, p[2]]
+
+            # Orientation perturbation: small random rotation around z-axis
+            # (yaw only — avoids tipping objects over)
+            dtheta = np.random.uniform(-rot_max, rot_max)
+            dq = t3d.euler.euler2quat(0, 0, dtheta)
+            new_q = t3d.quaternions.qmult(q, dq)
+
+            actor.set_pose(sapien.Pose(p=new_p, q=new_q))
+            perturbed_count += 1
+
+        print(f"[O2] Perturbed {perturbed_count} object poses "
+              f"(pos_std={pos_std:.3f}m, rot_max={np.rad2deg(rot_max):.1f}deg)")
 
     def get_cluttered_table(self, cluttered_numbers=10, xlim=[-0.59, 0.59], ylim=[-0.34, 0.34], zlim=[0.741]):
         self.record_cluttered_objects = []  # record cluttered objects
