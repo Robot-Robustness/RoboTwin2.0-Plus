@@ -147,7 +147,7 @@ class Camera:
                     new_dist = orig_dist * np.random.uniform(1 - dist_var, 1 + dist_var)
                     cam_pos = scene_center + new_dir * new_dist
 
-                    cam_forward = new_dir
+                    cam_forward = -new_dir
                     cam_left = np.cross([0, 0, 1], cam_forward)
                     cam_left /= np.linalg.norm(cam_left) + 1e-8
                     up = np.cross(cam_forward, cam_left)
@@ -194,36 +194,6 @@ class Camera:
 
             return camera, camera_config
 
-            # cam_forward = np.array(camera_info["forward"]) / np.linalg.norm(np.array(camera_info["forward"]))
-            # cam_left = np.array(camera_info["left"]) / np.linalg.norm(np.array(camera_info["left"]))
-            # up = np.cross(cam_forward, cam_left)
-            # mat44 = np.eye(4)
-            # mat44[:3, :3] = np.stack([cam_forward, cam_left, up], axis=1)
-            # mat44[:3, 3] = cam_pos
-
-            # # ========================= sensor camera =========================
-            # # sensor_config = StereoDepthSensorConfig()
-            # # sensor_config.rgb_resolution = (camera_config['w'], camera_config['h'])
-
-            # camera = scene.add_camera(
-            #     name=camera_info["name"],
-            #     width=camera_config["w"],
-            #     height=camera_config["h"],
-            #     fovy=np.deg2rad(camera_config["fovy"]),
-            #     near=near,
-            #     far=far,
-            # )
-            # camera.entity.set_pose(sapien.Pose(mat44))
-
-            # # ========================= sensor camera =========================
-            # # sensor_camera = StereoDepthSensor(
-            # #     sensor_config,
-            # #     sensor_mount_actor,
-            # #     sapien.Pose(mat44)
-            # # )
-            # # camera.entity.set_pose(sapien.Pose(camera_info['position']))
-            # # return camera, sensor_camera, camera_config
-            # return camera, camera_config
 
         # ================================= wrist camera =================================
         if self.collect_wrist_camera:
