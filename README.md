@@ -1,14 +1,12 @@
 # RoboTwin-Plus: Robustness Testing via Structured Perturbations
 
-> Extending RoboTwin with LIBERO-Plus-style perturbation categories
-> Source: `/work/behnam/RoboTwin/` | Upstream: `/shared_work/markhsp/RoboTwin_repo/`
-> Plus patches: `/shared_work/markhsp/robotwin_plus/`
+> Extending [RoboTwin 2.0](https://github.com/TianxingChen/RoboTwin) with [LIBERO-Plus](https://arxiv.org/abs/2510.13626)-style perturbation categories for evaluating VLA robustness.
 
 ---
 
 ## LIBERO-Plus Reference Taxonomy
 
-LIBERO-Plus (arXiv: 2510.13626) defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 difficulty levels for evaluating VLA robustness:
+LIBERO-Plus defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 difficulty levels:
 
 | Dimension | Sub-dims | Codes | Description |
 |-----------|----------|-------|-------------|
@@ -20,113 +18,70 @@ LIBERO-Plus (arXiv: 2510.13626) defines **7 perturbation dimensions, 21 sub-dime
 | **Language Instructions** | 3 | R1-R3 | R1: distraction; R2: common sense rewording; R3: reasoning chain |
 | **Sensor Noise** | 5 | N1-N5 | N1: motion blur; N2: gaussian blur; N3: zoom blur; N4: fog; N5: glass blur |
 
----
-
-## RoboTwin-Plus Coverage Map
-
-| LIBERO-Plus | Code | Status | Config File |
-|-------------|------|--------|-------------|
-| Sensor: Motion blur | N1 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
-| Sensor: Gaussian blur | N2 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
-| Sensor: Zoom blur | N3 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
-| Sensor: Fog | N4 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
-| Sensor: Glass blur | N5 | DONE | `demo_vision_noise.yml` / `demo_vision_noise_plus.yml` |
-| Light: Diffuse tint | L1 | DONE | `demo_light.yml` |
-| Light: Direction | L2 | DONE | `demo_light.yml` |
-| Light: Specular | L3 | DONE | `demo_light.yml` |
-| Light: Shadows | L4 | DONE | `demo_light.yml` |
-| Camera: Distance | C1 | DONE | `demo_camera.yml` |
-| Camera: Spherical | C2 | DONE | `demo_camera.yml` |
-| Camera: Orientation | C3 | DONE | `demo_camera.yml` |
-| Robot initial state | -- | DONE | `demo_robot_state.yml` |
-| Language: Distraction | R1 | **DONE** | `demo_language.yml` / `demo_language_plus.yml` |
-| Language: Common sense | R2 | **DONE** | `demo_language_r2.yml` / `demo_language_plus.yml` |
-| Language: Reasoning chain | R3 | **DONE** | `demo_language_r3.yml` / `demo_language_plus.yml` |
-| Objects: Confounders | O1 | **DONE (enhanced)** | `demo_objects_plus.yml` |
-| Objects: Target pose | O2 | **DONE** | `demo_objects_plus.yml` |
-| Background: Scene theme | B1 | **DONE (enhanced)** | `demo_background_plus.yml` |
-| Background: Surface | B2 | **DONE** | `demo_background_plus.yml` |
-
-**Summary: 21/21 LIBERO-Plus sub-dimensions fully implemented.**
+**Coverage: 21/21 LIBERO-Plus sub-dimensions fully implemented.**
 
 ---
 
-## Deployment
+## Quick Start
 
-The plus patches are **drop-in replacements** that sit on top of Behnam's existing code. All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
-
-### Install
+All data collection uses the same command pattern:
 
 ```bash
-# 1. Back up originals
-cp /work/behnam/RoboTwin/envs/_base_task.py /work/behnam/RoboTwin/envs/_base_task.py.bak
-cp /work/behnam/RoboTwin/envs/utils/create_actor.py /work/behnam/RoboTwin/envs/utils/create_actor.py.bak
-cp /work/behnam/RoboTwin/description/utils/generate_episode_instructions.py /work/behnam/RoboTwin/description/utils/generate_episode_instructions.py.bak
-
-# 2. Replace patched files (backward-compatible)
-cp /shared_work/markhsp/robotwin_plus/envs/_base_task.py /work/behnam/RoboTwin/envs/
-cp /shared_work/markhsp/robotwin_plus/envs/utils/create_actor.py /work/behnam/RoboTwin/envs/utils/
-cp /shared_work/markhsp/robotwin_plus/description/generate_episode_instructions.py /work/behnam/RoboTwin/description/utils/
-
-# 3. Add new YAML configs
-cp /shared_work/markhsp/robotwin_plus/task_config/demo_*_plus.yml /work/behnam/RoboTwin/task_config/
-cp /shared_work/markhsp/robotwin_plus/task_config/demo_language_r2.yml /work/behnam/RoboTwin/task_config/
-cp /shared_work/markhsp/robotwin_plus/task_config/demo_language_r3.yml /work/behnam/RoboTwin/task_config/
-
-# 4. Add pre-generated R2/R3 instruction variants (50 tasks x 50 variants)
-cp -r /shared_work/markhsp/robotwin_plus/description/task_instruction_plus/ /work/behnam/RoboTwin/description/task_instruction_plus/
+bash collect_data.sh <task_name> <config_name> <gpu_id>
 ```
 
-### Test the new configs
+- `<task_name>` — any of the 50 RoboTwin tasks (e.g. `beat_block_hammer`, `place_bread_basket`)
+- `<config_name>` — a YAML config name from `task_config/` (without `.yml`)
+- `<gpu_id>` — GPU index (e.g. `0`)
 
-```bash
-cd /work/behnam/RoboTwin
-
-# Background Plus (B1+ color tint / B2 surface material / floor)
-bash collect_data.sh beat_block_hammer demo_background_plus 0
-
-# Objects Plus (O1+ variable distractor count / O2 target pose noise)
-bash collect_data.sh beat_block_hammer demo_objects_plus 0
-
-# Sensor Noise Plus (gentler L1-L2 severity)
-bash collect_data.sh beat_block_hammer demo_vision_noise_plus 0
-
-# Language Plus — all R1+R2+R3 together
-bash collect_data.sh beat_block_hammer demo_language_plus 0
-
-# Language R2 only (common sense rewording)
-bash collect_data.sh beat_block_hammer demo_language_r2 0
-
-# Language R3 only (reasoning chain / goal state)
-bash collect_data.sh beat_block_hammer demo_language_r3 0
-```
-
-### Verify existing configs still work (regression)
+### Clean Baseline (no perturbation)
 
 ```bash
 bash collect_data.sh beat_block_hammer demo_clean 0
-bash collect_data.sh beat_block_hammer demo_randomized 0
-bash collect_data.sh beat_block_hammer demo_vision_noise 0
+```
+
+### The 7 Perturbation Branches
+
+Each branch corresponds to one LIBERO-Plus dimension. Run any of them individually:
+
+| # | Branch | Command | What it tests |
+|---|--------|---------|---------------|
+| 1 | **Sensor Noise** (N1-N5) | `bash collect_data.sh beat_block_hammer demo_vision_noise 0` | Motion / gaussian / zoom blur, fog, glass blur — cycles one noise type per episode |
+| 2 | **Lighting** (L1-L4) | `bash collect_data.sh beat_block_hammer demo_light 0` | Diffuse tint, direction, specular, shadows — cycles one per episode |
+| 3 | **Camera** (C1-C3) | `bash collect_data.sh beat_block_hammer demo_camera 0` | Distance, spherical position, orientation perturbation |
+| 4 | **Robot State** | `bash collect_data.sh beat_block_hammer demo_robot_state 0` | Initial joint angle noise (Gaussian, clipped) + gripper extremes |
+| 5 | **Language** (R1+R2+R3) | `bash collect_data.sh beat_block_hammer demo_language_plus 0` | Distraction + common sense rewording + reasoning chain instructions |
+| 6 | **Background** (B1+/B2) | `bash collect_data.sh beat_block_hammer demo_background_plus 0` | Wall/floor color tint + table surface material randomization |
+| 7 | **Objects** (O1+/O2) | `bash collect_data.sh beat_block_hammer demo_objects_plus 0` | Variable distractor count (3-15) + target object pose noise |
+
+### Language Sub-branch Ablations
+
+For isolating individual language perturbation types:
+
+```bash
+# R1 only — distraction prefixes
 bash collect_data.sh beat_block_hammer demo_language 0
+
+# R2 only — common sense rewording
+bash collect_data.sh beat_block_hammer demo_language_r2 0
+
+# R3 only — reasoning chain / goal state description
+bash collect_data.sh beat_block_hammer demo_language_r3 0
 ```
 
-### What to look for in logs
+### Original Behnam Configs (single-dimension baselines)
 
-Each new feature prints diagnostics:
-```
-[B1+] Wall color tint: (0.72, 1.43, 0.55)
-[B2]  Table surface: metallic=0.45, roughness=0.62, tint=(1.12, 0.88, 0.95)
-[B1+] Floor color: (0.61, 0.42, 0.87)
-[O1+] Placing 11 distractor objects (range 3-15)
-[O2]  Perturbed 4 object poses (pos_std=0.020m, rot_max=15.0deg)
-[Sensor Noise] gaussian @ L1 (s=0.00)
-  [R2] Episode 0: 25 commonsense variants
-  [R3] Episode 0: 10 reasoning variants
+These test individual dimensions without Plus enhancements:
+
+```bash
+bash collect_data.sh beat_block_hammer demo_background 0   # B1 texture swap only
+bash collect_data.sh beat_block_hammer demo_objects 0      # O1 fixed 10 distractors
+bash collect_data.sh beat_block_hammer demo_randomized 0   # Original full DR
 ```
 
-### Note on GPU
+### GPU Note
 
-`collect_data.sh` needs a GPU. On the cluster, wrap in sbatch:
+`collect_data.sh` requires a GPU. On a Slurm cluster, wrap in sbatch:
 
 ```bash
 #!/bin/bash
@@ -136,205 +91,135 @@ Each new feature prints diagnostics:
 #SBATCH --mem=32G
 #SBATCH --time=01:00:00
 #SBATCH --partition=compute
-#SBATCH --qos=high
-#SBATCH --output=/shared_work/markhsp/logs/rtwplus_test_%j.out
 
-export HF_HOME=/shared_work/markhsp/.cache/huggingface
-export UV_CACHE_DIR=/shared_work/markhsp/.cache/uv
-export PIP_CACHE_DIR=/shared_work/markhsp/.cache/pip
-export XDG_CACHE_HOME=/shared_work/markhsp/.cache
-
-cd /work/behnam/RoboTwin
+cd /path/to/robotwin-plus
 bash collect_data.sh beat_block_hammer demo_background_plus 0
-bash collect_data.sh beat_block_hammer demo_objects_plus 0
-bash collect_data.sh beat_block_hammer demo_vision_noise_plus 0
-bash collect_data.sh beat_block_hammer demo_language_plus 0
 ```
 
 ---
 
-## What the Plus Configs Add (vs Original RoboTwin)
+## What Each Config Does
 
-### 1. Background Plus (B1+ / B2) — `demo_background_plus.yml`
+### demo_clean.yml — Clean Baseline
+No perturbation. Deterministic scene layout, default lighting, standard camera, original task instructions.
 
-Goes beyond `demo_randomized.yml` which only swaps textures from a fixed pool.
+### demo_vision_noise.yml — Sensor Noise (N1-N5)
+Applies one of 5 noise types per episode (cycled): motion blur, gaussian blur, zoom blur, fog, glass blur. Noise is injected into camera observations at render time.
 
-| Feature | Original `demo_randomized` | **RoboTwin-Plus** |
-|---------|---------------------------|-------------------|
-| Wall texture | Random swap from seen/unseen pool | Same **+ random color tint** [0.4, 1.8] per RGB channel |
-| Table surface | Same texture swap as wall | **B2: Material randomization** — metallic [0, 0.8], roughness [0.05, 0.95], color tint |
-| Floor | Not touched | **Random floor color** [0.3, 1.0] per channel |
+### demo_light.yml — Lighting (L1-L4)
+Cycles through 4 lighting ablations per episode: L1 diffuse color tint, L2 directional shift, L3 specular highlights, L4 shadow manipulation.
 
-**Code**: `_base_task.py` lines 541-590, `create_actor.py` (create_table with `surface_params`)
-**YAML keys**: `domain_randomization.background_plus.{enabled, color_tint, tint_range, surface_material, metallic_range, roughness_range, floor_texture}`
+### demo_camera.yml — Camera Viewpoints (C1-C3)
+Perturbs camera placement: C1 varies distance, C2 changes spherical position, C3 rotates camera orientation. Uses `camera_viewpoints.yaml` for parameters.
 
-### 2. Objects Plus (O1+ / O2) — `demo_objects_plus.yml`
+### demo_robot_state.yml — Robot Initial State
+Adds Gaussian noise to initial joint angles (configurable std and clip range) plus random gripper extreme positions.
 
-Goes beyond `demo_objects.yml` which just sets `cluttered_table: true` (fixed 10 objects, no pose noise).
+### demo_language.yml — Language R1 (Distraction)
+Wraps original task instructions in irrelevant conversational context (e.g., "Hey, before we start, could you please...").
 
-| Feature | Original `demo_randomized` | **RoboTwin-Plus** |
-|---------|---------------------------|-------------------|
-| Distractor count | Fixed 10 | **Random 3-15** per episode (configurable) |
-| Target object pose | Static (as loaded) | **O2: Gaussian position noise** (2cm std) + **yaw rotation** (+/-15deg) |
+### demo_language_plus.yml — Language R1+R2+R3 (Combined)
+All three language perturbation types together:
+- **R1**: Distraction wrapping (~30%)
+- **R2**: Common sense rewording — replaces object names with functional descriptions, verb synonyms (~50%)
+- **R3**: Reasoning chain — rewrites as goal-state / outcome description (~20%)
 
-**Code**: `_base_task.py` lines 282-297 (O1+ dispatch), 597-634 (O2 method `_apply_target_pose_perturbation`)
-**YAML keys**: `domain_randomization.object_plus.{enabled, distractor_min, distractor_max, target_pose_perturbation.{enabled, position_std, rotation_max_deg}}`
+Uses 2,500 pre-generated instruction variants (50 tasks x 50 variants) in `description/task_instruction_plus/`.
 
-**O2 details**: Perturbs all task-relevant actors (skips table/wall/ground/robot links). Position noise is x,y only (keeps z to avoid floating/clipping). Rotation is yaw-only (avoids tipping objects over).
+### demo_language_r2.yml / demo_language_r3.yml — Language Ablations
+R2-only or R3-only for isolating individual language perturbation effects.
 
-### 3. Sensor Noise Plus (N1-N5 gentler) — `demo_vision_noise_plus.yml`
+### demo_background_plus.yml — Background (B1+/B2)
+Goes beyond texture swaps:
+- **B1+**: Random wall color tint + random floor color (not just texture IDs)
+- **B2**: Table surface material randomization — metallic [0, 0.8], roughness [0.05, 0.95], color tint per channel
 
-Same 5 noise types but with reduced severity so images stay recognizable.
+### demo_objects_plus.yml — Objects (O1+/O2)
+Goes beyond fixed 10 distractors:
+- **O1+**: Variable distractor count per episode (default 3-15)
+- **O2**: Target object pose perturbation — Gaussian position noise (2cm std, x/y only) + yaw rotation (±15deg)
 
-| Noise | Original max (L2, s=0.25) | **Plus max** (L1-L2, s=0-0.25) | Reduction |
-|-------|--------------------------|--------------------------------|-----------|
-| N1 Motion | kernel 6, sigma 2.75 | kernel **3**, sigma **1.6** | ~40% less |
-| N2 Gaussian | sigma 3.25 | sigma **1.6** | ~50% less |
-| N3 Zoom | 1.22x | **1.09x** | ~60% less |
-| N4 Fog | alpha 0.6 | alpha **0.35** | ~40% less |
-| N5 Glass | sigma 1.0, delta 2 | sigma **0.6**, delta **1** | ~40% less |
+### demo_background.yml / demo_objects.yml — Original Baselines
+Behnam's single-dimension baselines (B1 texture swap only, O1 fixed 10 distractors). Useful for comparison against Plus versions.
 
-**Key change**: Severity is now **YAML-configurable** via `sensor_noise_severity_min` / `sensor_noise_severity_max`. Default (when keys absent) matches Behnam's original behavior (always L2) for backward compatibility.
-
-### 4. Language Plus (R1 + R2 + R3) — `demo_language_plus.yml`
-
-Goes beyond `demo_language.yml` which only has R1 (distraction prefixes). Adds R2 and R3 following LIBERO-Plus taxonomy.
-
-| Type | What it does | Example |
-|------|-------------|---------|
-| **R1 Distraction** | Wraps instruction in irrelevant conversational context | "Hey, before we start, could you please pick up {A} and strike the block." |
-| **R2 Common Sense** | Replaces object names with functional descriptions, verb synonyms | "Seize the striking tool {A} with {a} and apply force to the rectangular solid." |
-| **R3 Reasoning Chain** | Rewrites as goal-state / outcome description | "Ensure the block has been struck using {A} held by {a}." |
-
-**Pre-generated variants**: 50 tasks x 50 variants each = **2,500 total instructions**
-- 15 R1 (distraction) per task
-- 25 R2 (common sense rewording) per task
-- 10 R3 (reasoning chain / goal state) per task
-
-Distribution follows LIBERO-Plus (~50% R2, ~30% R1, ~20% R3).
-
-**Instruction variants preserve placeholders** (`{A}`, `{B}`, `{a}`, etc.) so they get instantiated with concrete object descriptions at runtime, just like the original templates.
-
-**YAML configs**:
-- `demo_language_plus.yml` — all R1+R2+R3 generated together (`language.mode: language_plus`)
-- `demo_language_r2.yml` — R2-only ablation (`language.mode: r2`)
-- `demo_language_r3.yml` — R3-only ablation (`language.mode: r3`)
-
-**Code**: `generate_episode_instructions.py` — added `load_plus_instructions()`, R2/R3 dispatch in `generate_episode_descriptions()`, fixed `perturb_mode` bug in `__main__`
+### demo_randomized.yml — Original Full DR
+Upstream RoboTwin domain randomization (texture swap + 10 distractors + random lighting). Does not include Plus features.
 
 ---
 
-## Patched Files
+## YAML Inventory (19 files)
 
-All in `/shared_work/markhsp/robotwin_plus/`:
+### Internal configs (5)
+| File | Purpose |
+|------|---------|
+| `_config_template.yml` | Template for new configs |
+| `_camera_config.yml` | Camera specs |
+| `_embodiment_config.yml` | Robot asset paths |
+| `_eval_step_limit.yml` | Step budgets per task |
+| `camera_viewpoints.yaml` | Camera perturbation params (C1/C2/C3) |
 
+### Runnable configs (14)
+| File | Layer | Perturbation |
+|------|-------|-------------|
+| `demo_clean.yml` | Upstream | None (baseline) |
+| `demo_randomized.yml` | Upstream | Original full DR |
+| `demo_vision_noise.yml` | Behnam | Sensor Noise N1-N5 |
+| `demo_light.yml` | Behnam | Lighting L1-L4 |
+| `demo_camera.yml` | Behnam | Camera C1-C3 |
+| `demo_robot_state.yml` | Behnam | Robot init state |
+| `demo_language.yml` | Behnam | Language R1 only |
+| `demo_background.yml` | Behnam | Background B1 only |
+| `demo_objects.yml` | Behnam | Objects O1 only |
+| **`demo_background_plus.yml`** | **Plus** | B1+ color tint + B2 surface material |
+| **`demo_objects_plus.yml`** | **Plus** | O1+ variable distractors + O2 pose noise |
+| **`demo_language_plus.yml`** | **Plus** | R1 + R2 + R3 combined |
+| **`demo_language_r2.yml`** | **Plus** | R2 only (common sense) |
+| **`demo_language_r3.yml`** | **Plus** | R3 only (reasoning chain) |
+
+---
+
+## Log Diagnostics
+
+Each Plus feature prints diagnostics during data collection:
+
+```
+[B1+] Wall color tint: (0.72, 1.43, 0.55)
+[B2]  Table surface: metallic=0.45, roughness=0.62, tint=(1.12, 0.88, 0.95)
+[B1+] Floor color: (0.61, 0.42, 0.87)
+[O1+] Placing 11 distractor objects (range 3-15)
+[O2]  Perturbed 4 object poses (pos_std=0.020m, rot_max=15.0deg)
+Episode noise: gaussian @ L2
+  [R2] Episode 0: 25 commonsense variants
+  [R3] Episode 0: 10 reasoning variants
+```
+
+---
+
+## Repository Structure
+
+This repo has 3 layered commits:
+
+1. **Upstream RoboTwin v2.0** — original codebase
+2. **Behnam's perturbation extensions** — N1-N5, L1-L4, C1-C3, R1, robot init state
+3. **RoboTwin-Plus** — B1+/B2 background, O1+/O2 objects, R2/R3 language
+
+All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
+
+### Key modified files (vs upstream)
 | File | What changed |
 |------|-------------|
-| `envs/_base_task.py` | B1+/B2 background (lines 156-164, 541-590), O1+/O2 objects (lines 166-174, 282-297, 597-634), sensor noise severity config + reduced params (lines 81-96, 801-916) |
-| `envs/utils/create_actor.py` | `create_table()` accepts `surface_params` dict for B2 material randomization |
-| `description/generate_episode_instructions.py` | R2/R3 dispatch using pre-generated variants, `load_plus_instructions()`, `save_episode_descriptions()` saves R2/R3 keys, fixed `perturb_mode` bug |
-| `description/task_instruction_plus/*.json` | **50 files** — pre-generated R1/R2/R3 instruction variants (2,500 total) |
-| `task_config/demo_background_plus.yml` | B1+/B2 ablation config |
-| `task_config/demo_objects_plus.yml` | O1+/O2 ablation config |
-| `task_config/demo_vision_noise_plus.yml` | Gentler N1-N5 with severity_min=1, severity_max=2 |
-| `task_config/demo_language_plus.yml` | R1+R2+R3 combined language perturbation |
-| `task_config/demo_language_r2.yml` | R2-only (common sense rewording) ablation |
-| `task_config/demo_language_r3.yml` | R3-only (reasoning chain) ablation |
+| `envs/_base_task.py` | Sensor noise, lighting, camera, robot init (Behnam) + B1+/B2, O1+/O2 config parsing and dispatch (Plus) |
+| `envs/camera/camera.py` | Camera ablation C1/C2/C3 support (Behnam) |
+| `envs/utils/create_actor.py` | `create_table()` accepts `surface_params` for B2 material randomization (Plus) |
+| `description/utils/generate_episode_instructions.py` | R1 distraction (Behnam) + R2/R3 dispatch (Plus) |
 
----
-
-## Full YAML Inventory
-
-**Total: 20 configs** (6 original + 8 Behnam + 6 plus)
-
-### Original/Upstream (6)
-| File | Type |
-|------|------|
-| `_embodiment_config.yml` | Internal — robot asset paths |
-| `_camera_config.yml` | Internal — camera specs |
-| `_config_template.yml` | Internal — template |
-| `_eval_step_limit.yml` | Internal — step budgets |
-| `demo_clean.yml` | Baseline (modified by Behnam) |
-| `demo_randomized.yml` | Original full DR |
-
-### Added by Behnam (8)
-| File | Perturbation |
-|------|-------------|
-| `demo_vision_noise.yml` | Sensor Noise N1-N5 |
-| `demo_light.yml` | Lighting L1-L4 |
-| `demo_camera.yml` | Camera C1-C3 |
-| `camera_viewpoints.yaml` | Camera params |
-| `demo_robot_state.yml` | Robot init state |
-| `demo_language.yml` | Language R1 |
-| `demo_background.yml` | Background B1 only |
-| `demo_objects.yml` | Objects O1 (same as randomized) |
-
-### Added by RoboTwin-Plus (6)
-| File | What's new vs original |
-|------|----------------------|
-| `demo_background_plus.yml` | B1+ color tint + B2 surface material + floor color |
-| `demo_objects_plus.yml` | O1+ variable distractor count + O2 target pose noise |
-| `demo_vision_noise_plus.yml` | Configurable severity, gentler L1-L2 defaults |
-| `demo_language_plus.yml` | R1+R2+R3 combined language perturbation |
-| `demo_language_r2.yml` | R2-only common sense rewording |
-| `demo_language_r3.yml` | R3-only reasoning chain / goal state |
-
-### Runnable ablation configs: 15
-`demo_clean`, `demo_randomized`, `demo_vision_noise`, `demo_light`, `demo_camera`, `demo_robot_state`, `demo_language`, `demo_background`, `demo_objects`, **`demo_background_plus`**, **`demo_objects_plus`**, **`demo_vision_noise_plus`**, **`demo_language_plus`**, **`demo_language_r2`**, **`demo_language_r3`**
-
----
-
-## Merging on a Local Machine
-
-The plus patches are self-contained. To merge with Behnam's repo locally:
-
-```
-your_local_robotwin/                      # Behnam's original repo
-├── envs/
-│   ├── _base_task.py                     ← REPLACE with robotwin_plus/envs/_base_task.py
-│   └── utils/
-│       └── create_actor.py               ← REPLACE with robotwin_plus/envs/utils/create_actor.py
-├── description/
-│   ├── utils/
-│   │   └── generate_episode_instructions.py  ← REPLACE with robotwin_plus/description/generate_episode_instructions.py
-│   └── task_instruction_plus/            ← NEW DIRECTORY (copy entire folder)
-│       ├── adjust_bottle.json
-│       ├── beat_block_hammer.json
-│       └── ... (50 files total)
-└── task_config/
-    ├── demo_background_plus.yml          ← NEW
-    ├── demo_objects_plus.yml             ← NEW
-    ├── demo_vision_noise_plus.yml        ← NEW
-    ├── demo_language_plus.yml            ← NEW
-    ├── demo_language_r2.yml              ← NEW
-    └── demo_language_r3.yml              ← NEW
-```
-
-All replacements are backward-compatible — existing configs (demo_clean, demo_randomized, etc.) work identically because new features only activate when their YAML keys are present.
-
----
-
-## Behnam's Original Modifications vs Upstream RoboTwin
-
-### Modified files (from upstream)
-
-**`envs/_base_task.py`** — all perturbation logic:
-- Sensor noise setup + application in `get_obs()` (N1-N5)
-- Lighting ablation (L1-L4) in `setup_scene()`
-- Camera viewpoint perturbation (C1-C3) after camera load
-- Robot initial state randomization
-
-**`description/utils/generate_episode_instructions.py`**:
-- `make_r1_distraction()` function + `perturb` parameter
-
-**`task_config/demo_clean.yml`** — modified from upstream:
-- NOTE: Has drifted — now has `random_head_camera_dis: 0.15` and `language.mode: r1`
-
-### Object Perturbation: demo_objects.yml vs demo_randomized.yml
-
-Original `demo_objects.yml` uses the **exact same** `get_cluttered_table()` as `demo_randomized.yml` (fixed 10 objects, same pool). It's just an isolation — everything else disabled.
-
-`demo_objects_plus.yml` goes further: variable 3-15 distractors + O2 target pose perturbation.
+### Key new files
+| File | Purpose |
+|------|---------|
+| `description/task_instruction_plus/*.json` | 50 files — pre-generated R1/R2/R3 instruction variants (2,500 total) |
+| `task_config/demo_*_plus.yml` | Plus ablation configs |
+| `task_config/demo_language_r2.yml` | R2-only ablation |
+| `task_config/demo_language_r3.yml` | R3-only ablation |
 
 ---
 
