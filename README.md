@@ -147,34 +147,70 @@ Upstream RoboTwin domain randomization (texture swap + 10 distractors + random l
 
 ---
 
-## YAML Inventory (19 files)
+## All 19 YAML Config Files
 
-### Internal configs (5)
-| File | Purpose |
-|------|---------|
-| `_config_template.yml` | Template for new configs |
-| `_camera_config.yml` | Camera specs |
-| `_embodiment_config.yml` | Robot asset paths |
-| `_eval_step_limit.yml` | Step budgets per task |
-| `camera_viewpoints.yaml` | Camera perturbation params (C1/C2/C3) |
+All configs live in `task_config/`.
+
+### Internal configs (5) — not runnable directly
+
+| # | File | Purpose |
+|---|------|---------|
+| 1 | `_config_template.yml` | Template for creating new configs |
+| 2 | `_camera_config.yml` | Camera hardware specs |
+| 3 | `_embodiment_config.yml` | Robot asset paths |
+| 4 | `_eval_step_limit.yml` | Step budgets per task |
+| 5 | `camera_viewpoints.yaml` | Camera perturbation parameters for C1/C2/C3 |
 
 ### Runnable configs (14)
-| File | Layer | Perturbation |
-|------|-------|-------------|
-| `demo_clean.yml` | Upstream | None (baseline) |
-| `demo_randomized.yml` | Upstream | Original full DR |
-| `demo_vision_noise.yml` | Behnam | Sensor Noise N1-N5 |
-| `demo_light.yml` | Behnam | Lighting L1-L4 |
-| `demo_camera.yml` | Behnam | Camera C1-C3 |
-| `demo_robot_state.yml` | Behnam | Robot init state |
-| `demo_language.yml` | Behnam | Language R1 only |
-| `demo_background.yml` | Behnam | Background B1 only |
-| `demo_objects.yml` | Behnam | Objects O1 only |
-| **`demo_background_plus.yml`** | **Plus** | B1+ color tint + B2 surface material |
-| **`demo_objects_plus.yml`** | **Plus** | O1+ variable distractors + O2 pose noise |
-| **`demo_language_plus.yml`** | **Plus** | R1 + R2 + R3 combined |
-| **`demo_language_r2.yml`** | **Plus** | R2 only (common sense) |
-| **`demo_language_r3.yml`** | **Plus** | R3 only (reasoning chain) |
+
+| # | File | Layer | Perturbation | Run for evaluation? |
+|---|------|-------|-------------|---------------------|
+| 6 | `demo_clean.yml` | Upstream | None (clean baseline) | **Yes — baseline** |
+| 7 | `demo_randomized.yml` | Upstream | Original full DR (texture + 10 distractors + light) | No — legacy |
+| 8 | `demo_vision_noise.yml` | Behnam | Sensor Noise N1-N5 | **Yes — Branch 1** |
+| 9 | `demo_light.yml` | Behnam | Lighting L1-L4 | **Yes — Branch 2** |
+| 10 | `demo_camera.yml` | Behnam | Camera C1-C3 | **Yes — Branch 3** |
+| 11 | `demo_robot_state.yml` | Behnam | Robot initial state perturbation | **Yes — Branch 4** |
+| 12 | `demo_language.yml` | Behnam | Language R1 only (distraction) | No — use `demo_language_plus` instead |
+| 13 | `demo_background.yml` | Behnam | Background B1 only (texture swap) | No — use `demo_background_plus` instead |
+| 14 | `demo_objects.yml` | Behnam | Objects O1 only (fixed 10 distractors) | No — use `demo_objects_plus` instead |
+| 15 | **`demo_background_plus.yml`** | **Plus** | B1+ color tint + B2 surface material + floor | **Yes — Branch 5** |
+| 16 | **`demo_objects_plus.yml`** | **Plus** | O1+ variable distractors (3-15) + O2 pose noise | **Yes — Branch 6** |
+| 17 | **`demo_language_plus.yml`** | **Plus** | R1 + R2 + R3 combined | **Yes — Branch 7** |
+| 18 | **`demo_language_r2.yml`** | **Plus** | R2 only (common sense rewording) | Optional ablation |
+| 19 | **`demo_language_r3.yml`** | **Plus** | R3 only (reasoning chain) | Optional ablation |
+
+### Summary: the 8 configs you need
+
+To run a full LIBERO-Plus-style evaluation, use **1 baseline + 7 perturbation branches**:
+
+```bash
+# 0. Clean baseline
+bash collect_data.sh <task> demo_clean 0
+
+# 1. Sensor Noise (N1-N5)
+bash collect_data.sh <task> demo_vision_noise 0
+
+# 2. Lighting (L1-L4)
+bash collect_data.sh <task> demo_light 0
+
+# 3. Camera (C1-C3)
+bash collect_data.sh <task> demo_camera 0
+
+# 4. Robot State
+bash collect_data.sh <task> demo_robot_state 0
+
+# 5. Background (B1+/B2)
+bash collect_data.sh <task> demo_background_plus 0
+
+# 6. Objects (O1+/O2)
+bash collect_data.sh <task> demo_objects_plus 0
+
+# 7. Language (R1+R2+R3)
+bash collect_data.sh <task> demo_language_plus 0
+```
+
+Replace `<task>` with any of the 50 RoboTwin tasks (e.g. `beat_block_hammer`).
 
 ---
 
