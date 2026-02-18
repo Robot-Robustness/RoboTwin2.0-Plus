@@ -13,8 +13,8 @@ domain_randomization:
   apply_robot_init_random: true          # main switch (true/false)
   robot_init:
     enabled: true                        # redundant but consistent with camera style
-    joint_std: 0.2                       # Gaussian std in radians (~11.5° per joint)
-    max_clip_rad: 0.45                    # max deviation from home per joint (~25.8°)
+    joint_std: 0.1                       # Gaussian std in radians (~5.7° per joint)
+    max_clip_rad: 0.225                   # max deviation from home per joint (~12.9°)
     gripper_extreme_prob: 0.25            # probability to set gripper to extreme (0.05 or 0.95)
     apply_to_both_arms: true             # randomize both left & right
   # All other randomizations turned off for pure lighting isolation

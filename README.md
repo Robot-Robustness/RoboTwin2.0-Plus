@@ -14,7 +14,7 @@ LIBERO-Plus defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 diff
 | **Background Textures** | 2 | B1, B2 | B1: scene theme (950 curated textures); B2: surface/tabletop appearance |
 | **Light Conditions** | 4 | L1-L4 | L1: diffuse color; L2: direction; L3: specular; L4: shadows |
 | **Camera Viewpoints** | 3 | C1-C3 | C1: distance; C2: spherical position; C3: orientation |
-| **Robot Initial States** | 1 | -- | Initial joint angle perturbation (0.1-0.5 rad) |
+| **Robot Initial States** | 1 | -- | Initial joint angle perturbation (std=0.1 rad, clip ±0.225 rad) |
 | **Language Instructions** | 3 | R1-R3 | R1: distraction; R2: common sense rewording; R3: reasoning chain |
 | **Sensor Noise** | 5 | N1-N5 | N1: motion blur; N2: gaussian blur; N3: zoom blur; N4: fog; N5: glass blur |
 
