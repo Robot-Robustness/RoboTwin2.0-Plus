@@ -104,6 +104,11 @@ class Camera:
             random_dir = vector / np.linalg.norm(vector)
             cam_pos = cam_pos + random_dir * np.random.uniform(low=0, high=random_head_camera_dis)
             #### new codes
+            # Compute original forward/left/up vectors
+            cam_forward = np.array(camera_info["forward"]) / np.linalg.norm(np.array(camera_info["forward"]))
+            cam_left = np.array(camera_info["left"]) / np.linalg.norm(np.array(camera_info["left"]))
+            up = np.cross(cam_forward, cam_left)
+
             # NEW: Structured ablation C1/C2/C3 (overrides jitter if enabled)
             if camera_ablation_cfg is not None and camera_info["name"] == "head_camera":
                 cfg = camera_ablation_cfg
@@ -120,15 +125,10 @@ class Camera:
 
                 print(f"  → C1={do_c1}, C2={do_c2}, C3={do_c3}")
 
-                new_p = orig_p.copy()
-                new_forward = cam_forward.copy()
-                new_left = cam_left.copy()
-                new_up = up.copy()
-
                 if do_c1:
                     scale = np.random.uniform(cfg["c1"]["min_scale"], cfg["c1"]["max_scale"])
                     new_dist = orig_dist * scale
-                    new_p = scene_center + orig_dir * new_dist
+                    cam_pos = scene_center + orig_dir * new_dist
                     print(f"  [C1] Distance ×{scale:.2f} → {new_dist:.3f}m")
 
                 if do_c2:
@@ -145,12 +145,12 @@ class Camera:
 
                     dist_var = cfg["c2"].get("distance_variation", 0.0)
                     new_dist = orig_dist * np.random.uniform(1 - dist_var, 1 + dist_var)
-                    new_p = scene_center + new_dir * new_dist
+                    cam_pos = scene_center + new_dir * new_dist
 
-                    new_forward = new_dir
-                    new_left = np.cross([0, 0, 1], new_forward)
-                    new_left /= np.linalg.norm(new_left) + 1e-8
-                    new_up = np.cross(new_forward, new_left)
+                    cam_forward = new_dir
+                    cam_left = np.cross([0, 0, 1], cam_forward)
+                    cam_left /= np.linalg.norm(cam_left) + 1e-8
+                    up = np.cross(cam_forward, cam_left)
 
                     print(f"  [C2] ∆Az {az_delta:.1f}°, ∆El {el_delta:.1f}° → dist {new_dist:.3f}m")
 
@@ -170,24 +170,14 @@ class Camera:
                     rot_pitch = t3d.axangles.axangle2mat([1, 0, 0], np.deg2rad(pitch))
                     rot_roll = t3d.axangles.axangle2mat([0, 0, 1], np.deg2rad(roll))
 
-                    orig_rot = np.stack([new_forward, new_left, new_up], axis=1)
+                    orig_rot = np.stack([cam_forward, cam_left, up], axis=1)
                     new_rot = rot_yaw @ rot_pitch @ rot_roll @ orig_rot
 
-                    new_forward = new_rot[:, 0] / (np.linalg.norm(new_rot[:, 0]) + 1e-8)
-                    new_left = new_rot[:, 1] / (np.linalg.norm(new_rot[:, 1]) + 1e-8)
-                    new_up = new_rot[:, 2] / (np.linalg.norm(new_rot[:, 2]) + 1e-8)
+                    cam_forward = new_rot[:, 0] / (np.linalg.norm(new_rot[:, 0]) + 1e-8)
+                    cam_left = new_rot[:, 1] / (np.linalg.norm(new_rot[:, 1]) + 1e-8)
+                    up = new_rot[:, 2] / (np.linalg.norm(new_rot[:, 2]) + 1e-8)
 
                     print(f"  [C3] Y/P/R ∆: {yaw:.1f}° / {pitch:.1f}° / {roll:.1f}°")
-
-                cam_pos = new_p
-                cam_forward = new_forward
-                cam_left = new_left
-                up = new_up
-
-            # Original forward/left/up (use updated ones if ablation applied)
-            cam_forward = np.array(camera_info["forward"]) / np.linalg.norm(np.array(camera_info["forward"]))
-            cam_left = np.array(camera_info["left"]) / np.linalg.norm(np.array(camera_info["left"]))
-            up = np.cross(cam_forward, cam_left)
             mat44 = np.eye(4)
             mat44[:3, :3] = np.stack([cam_forward, cam_left, up], axis=1)
             mat44[:3, 3] = cam_pos
@@ -292,7 +282,8 @@ class Camera:
                     camera_info["type"] = self.head_camera_type
                     # camera, sensor_camera, camera_config = create_camera(camera_info)
                     camera, camera_config = create_camera(camera_info,
-                                                          random_head_camera_dis=self.random_head_camera_dis)
+                                                          random_head_camera_dis=self.random_head_camera_dis,
+                                                          camera_ablation_cfg=self.camera_perturb_config if self.apply_camera_ablation else None)
                     self.static_camera_list.append(camera)
                     self.static_camera_name.append(camera_info["name"])
                     # self.static_sensor_camera_list.append(sensor_camera)
