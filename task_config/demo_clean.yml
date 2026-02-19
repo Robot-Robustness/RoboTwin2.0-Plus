@@ -21,7 +21,7 @@ domain_randomization:
   random_background: false
   cluttered_table: false
   clean_background_rate: 1.0
-  random_head_camera_dis: 0.15
+  random_head_camera_dis: 0.0
   random_table_height: 0.0
   random_light: false                     # Legacy flag — not needed when cycling is on
   random_embodiment: false
