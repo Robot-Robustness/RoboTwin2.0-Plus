@@ -68,7 +68,6 @@ def main(usr_args):
     ckpt_setting = usr_args["ckpt_setting"]
     # checkpoint_num = usr_args['checkpoint_num']
     policy_name = usr_args["policy_name"]
-    instruction_type = usr_args["instruction_type"]
     save_dir = None
     video_save_dir = None
     video_size = None
@@ -81,6 +80,19 @@ def main(usr_args):
     args['task_name'] = task_name
     args["task_config"] = task_config
     args["ckpt_setting"] = ckpt_setting
+
+    # Derive perturb from language.mode in task config
+    LANGUAGE_MODE_MAP = {
+        "seen": "seen",
+        "r1": "r1",
+        "r2": "r2",
+        "r3": "r3",
+        "r1r2r3": "r1r2r3",
+        "language_plus": "language_plus",
+    }
+    language_config = args.get("language", {})
+    language_mode = language_config.get("mode", "seen") if isinstance(language_config, dict) else "seen"
+    perturb = LANGUAGE_MODE_MAP.get(language_mode, "seen")
 
     embodiment_type = args.get("embodiment")
     embodiment_config_path = os.path.join(CONFIGS_PATH, "_embodiment_config.yml")
@@ -159,7 +171,7 @@ def main(usr_args):
 
     st_seed = 100000 * (1 + seed)
     suc_nums = []
-    test_num = 100
+    test_num = int(usr_args.get("test_num", 100))
     topk = 1
 
     model = get_model(usr_args)
@@ -170,7 +182,7 @@ def main(usr_args):
                                    st_seed,
                                    test_num=test_num,
                                    video_size=video_size,
-                                   instruction_type=instruction_type)
+                                   perturb=perturb)
     suc_nums.append(suc_num)
 
     topk_success_rate = sorted(suc_nums, reverse=True)[:topk]
@@ -178,7 +190,7 @@ def main(usr_args):
     file_path = os.path.join(save_dir, f"_result.txt")
     with open(file_path, "w") as file:
         file.write(f"Timestamp: {current_time}\n\n")
-        file.write(f"Instruction Type: {instruction_type}\n\n")
+        file.write(f"Language Mode: {perturb}\n\n")
         # file.write(str(task_reward) + '\n')
         file.write("\n".join(map(str, np.array(suc_nums) / test_num)))
 
@@ -193,7 +205,7 @@ def eval_policy(task_name,
                 st_seed,
                 test_num=100,
                 video_size=None,
-                instruction_type=None):
+                perturb="seen"):
     print(f"\033[34mTask Name: {args['task_name']}\033[0m")
     print(f"\033[34mPolicy Name: {args['policy_name']}\033[0m")
 
@@ -254,9 +266,22 @@ def eval_policy(task_name,
         args["render_freq"] = render_freq
 
         TASK_ENV.setup_demo(now_ep_num=now_id, seed=now_seed, is_test=True, **args)
-        episode_info_list = [episode_info["info"]]
-        results = generate_episode_descriptions(args["task_name"], episode_info_list, test_num)
-        instruction = np.random.choice(results[0][instruction_type])
+
+        if perturb == "seen":
+            episode_info_list = [episode_info["info"]]
+            results = generate_episode_descriptions(args["task_name"], episode_info_list, test_num)
+            instruction = np.random.choice(results[0]["seen"])
+        else:
+            plus_data = load_plus_instructions(args["task_name"])
+            if perturb in ("r1r2r3", "language_plus"):
+                pool = (plus_data.get("r1_distraction", [])
+                      + plus_data.get("r2_commonsense", [])
+                      + plus_data.get("r3_reasoning", []))
+            else:
+                key_map = {"r1": "r1_distraction", "r2": "r2_commonsense", "r3": "r3_reasoning"}
+                pool = plus_data.get(key_map[perturb], [])
+            instruction = np.random.choice(pool)
+
         TASK_ENV.set_instruction(instruction=instruction)  # set language instruction
 
         if TASK_ENV.eval_video_path is not None:

@@ -128,9 +128,6 @@ def replace_placeholders_unseen(instruction: str, episode_params: Dict[str, str]
     return instruction
 
 
-
-
-    
 def load_task_instructions(task_name: str) -> Dict[str, Any]:
     """Load the task instructions from the JSON file."""
     file_path = os.path.join(parent_directory, f"../task_instruction/{task_name}.json")
@@ -204,8 +201,7 @@ def save_episode_descriptions(task_name: str, setting: str, generated_descriptio
             json.dump(save_dict, f, indent=2)
 
 
-# def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000):
-def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000, perturb: str = "seen"):   # ← ADD THIS
+def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]], max_descriptions: int = 1000000):
     """
     Generate descriptions for episodes by replacing placeholders in instructions with parameter values.
     For each episode, filter instructions that have matching placeholders and generate up to
@@ -219,83 +215,6 @@ def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]]
 
     # Store generated descriptions for each episode
     all_generated_descriptions = []
-
-
-
-
-    # ────────────────────────────────────────────────
-    # NEW: R1 Distraction post-processing (LIBERO-Plus style)
-    # ────────────────────────────────────────────────
-    def make_r1_distraction(base: str) -> str:
-        if not base.strip():
-            return base
-        prefixes = [
-            "Hey, before we do anything else, could you please ",
-            "Just so everything is ready, make sure to ",
-            "Quick reminder — while you're here, ",
-            "Alright, let's handle this first: ",
-            "If it's not too much trouble, would you mind to ",
-            "Before we move on or touch other things, ",
-            "So first things first, go ahead and ",
-            "To keep things organized and safe, ",
-            "Hey robot, could you please ",
-            "Quick thing — make sure to ",
-            "Hi there, go ahead and ",
-            "Before we start, please ",
-            "Hey, just do this first: ",
-            "Alright, let's handle ",
-            "Quick reminder — ",
-            "Hey robot, would you mind ",
-            "Hi, make sure to ",
-            "Before anything else, ",
-            "Hey there, please ",
-            "Let's take care of this: ",
-            "Quick note — go ahead and ",
-            "Hello, could you ",
-            "Hey robot, first off ",
-            "Hi there, just make sure ",
-            "Before we move on, ",
-            "Alright, please do ",
-            "Hey, one small step — ",
-            "Quick check — ",
-            "Hi robot, go for it: ",
-            "Hey there, would you please ",
-            "Hello, make sure to ",
-            "Before we continue, ",
-            "Hey robot, how are you doing? Could you ",
-            "Quick hello — please ",
-            "Hi, let's do this: ",
-            "Hey, before we get going, ",
-            "Alright, first thing — ",
-            "Hello there, go ahead and ",
-            "Hey robot, everything good? Then please ",
-            "Quick reminder, make sure to ",
-            "Hi there, could you please ",
-            "Before the next step, ",
-            "Hey, just this one thing: ",
-            "Hello, would you mind to ",
-            "Quick note — ",
-            "Hey robot, hope you're running smoothly — go ahead and ",
-            "Hi, please make sure ",
-            "Alright, let's start with ",
-            "Hey there, before we do more, ",
-            "Hello, quick task — ",
-            "Hey robot, all set? Then ",
-            "Quick check-in — please ",
-            "Hi there, make sure to ",
-            "Before anything else happens, ",
-            "Hey, one moment — could you ",
-            "Hello robot, feeling ready? If so, ",
-            "Quick thing before we continue — ",
-            "Hey robot, good to see you — please "
-
-        ]
-        p = random.choice(prefixes)
-        instr_lower = base[0].lower() + base[1:] 
-        return p + instr_lower
-    # ────────────────────────────────────────────────
-
-
 
     # Process each episode
     for i, episode in enumerate(episodes):
@@ -330,89 +249,11 @@ def generate_episode_descriptions(task_name: str, episodes: List[Dict[str, str]]
                 description = replace_placeholders_unseen(instruction, episode)
                 unseen_episode_descriptions.append(description)
 
-        # all_generated_descriptions.append({
-        #     "episode_index": i,
-        #     "seen": seen_episode_descriptions,
-        #     "unseen": unseen_episode_descriptions,
-        # })
-
-        episode_dict = {
+        all_generated_descriptions.append({
             "episode_index": i,
             "seen": seen_episode_descriptions,
             "unseen": unseen_episode_descriptions,
-        }
-
-
-
-
-        # ────────────────────────────────────────────────
-        # NEW: if perturb == "r1", add distraction versions
-        # ────────────────────────────────────────────────
-        if perturb == "r1":
-            r1_list = []
-            base_pool = unseen_episode_descriptions if unseen_episode_descriptions else seen_episode_descriptions
-            random.shuffle(base_pool)
-            for base in base_pool:
-                if len(r1_list) >= max_descriptions:
-                    break
-                r1_list.append(make_r1_distraction(base))
-            episode_dict["r1_distraction"] = r1_list
-        # ────────────────────────────────────────────────
-
-        # ────────────────────────────────────────────────
-        # RoboTwin-Plus: R2 (common sense) and R3 (reasoning chain)
-        # Uses pre-generated instruction variants from task_instruction_plus/
-        # ────────────────────────────────────────────────
-        if perturb in ("r2", "r3", "r1r2r3", "language_plus"):
-            plus_data = load_plus_instructions(task_name)
-            if plus_data:
-                # R1 distraction: use pre-generated variants, instantiate placeholders
-                if perturb in ("r1", "r1r2r3", "language_plus"):
-                    r1_templates = plus_data.get("r1_distraction", [])
-                    if r1_templates:
-                        r1_filtered = filter_instructions(r1_templates, episode)
-                        r1_descs = []
-                        for tmpl in r1_filtered:
-                            if len(r1_descs) >= max_descriptions:
-                                break
-                            r1_descs.append(replace_placeholders_unseen(tmpl, episode))
-                        if not r1_descs:
-                            # Fallback: use runtime R1 generation
-                            base_pool = unseen_episode_descriptions if unseen_episode_descriptions else seen_episode_descriptions
-                            for base in base_pool[:max_descriptions]:
-                                r1_descs.append(make_r1_distraction(base))
-                        episode_dict["r1_distraction"] = r1_descs
-
-                # R2 commonsense: use pre-generated variants, instantiate placeholders
-                if perturb in ("r2", "r1r2r3", "language_plus"):
-                    r2_templates = plus_data.get("r2_commonsense", [])
-                    if r2_templates:
-                        r2_filtered = filter_instructions(r2_templates, episode)
-                        r2_descs = []
-                        for tmpl in r2_filtered:
-                            if len(r2_descs) >= max_descriptions:
-                                break
-                            r2_descs.append(replace_placeholders_unseen(tmpl, episode))
-                        episode_dict["r2_commonsense"] = r2_descs
-                        if r2_descs:
-                            print(f"  [R2] Episode {i}: {len(r2_descs)} commonsense variants")
-
-                # R3 reasoning: use pre-generated variants, instantiate placeholders
-                if perturb in ("r3", "r1r2r3", "language_plus"):
-                    r3_templates = plus_data.get("r3_reasoning", [])
-                    if r3_templates:
-                        r3_filtered = filter_instructions(r3_templates, episode)
-                        r3_descs = []
-                        for tmpl in r3_filtered:
-                            if len(r3_descs) >= max_descriptions:
-                                break
-                            r3_descs.append(replace_placeholders_unseen(tmpl, episode))
-                        episode_dict["r3_reasoning"] = r3_descs
-                        if r3_descs:
-                            print(f"  [R3] Episode {i}: {len(r3_descs)} reasoning variants")
-        # ────────────────────────────────────────────────
-
-        all_generated_descriptions.append(episode_dict)
+        })
 
 
 
@@ -449,12 +290,8 @@ if __name__ == "__main__":
     scene_info = load_scene_info(args.task_name, args.setting, args_dict['save_path'])
     episodes = extract_episodes_from_scene_info(scene_info)
 
-    # RoboTwin-Plus: read language mode from YAML config
-    language_config = args_dict.get("language", {})
-    perturb_mode = language_config.get("mode", "seen") if isinstance(language_config, dict) else "seen"
-
     # Generate descriptions
-    results = generate_episode_descriptions(args.task_name, episodes, args.max_num, perturb=perturb_mode)
+    results = generate_episode_descriptions(args.task_name, episodes, args.max_num)
 
     # Save results to output files
     save_episode_descriptions(args.task_name, args.setting, results)
