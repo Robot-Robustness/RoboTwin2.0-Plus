@@ -402,14 +402,14 @@ class Base_Task(gym.Env):
             self.direction_light_lst = []
             for dl in direction_lights:
                 direction, color = dl[0], dl[1]
-                light = self.scene.add_directional_light(direction=direction, color=color, shadow=False)
+                light = self.scene.add_directional_light(direction=direction, color=color, shadow=True)
                 self.direction_light_lst.append(light)
 
             point_lights = kwargs.get("point_lights", [[[1, 0, 1.8], [1, 1, 1]], [[-1, 0, 1.8], [1, 1, 1]]])
             self.point_light_lst = []
             for pl in point_lights:
                 pos, color = pl[0], pl[1]
-                light = self.scene.add_point_light(pos, color, shadow=False)
+                light = self.scene.add_point_light(pos, color, shadow=True)
                 self.point_light_lst.append(light)
         else:
             # ── Decide lighting independently per episode ────────────────────────────
