@@ -19,21 +19,21 @@ domain_randomization:
     c1:                             # Distance scaling
       enabled: true
       prob: 1.0
-      min_scale: 0.5
+      min_scale: 0.7
       max_scale: 1.0
 
     c2:                             # Spherical position (azimuth + elevation)
       enabled: true
       prob: 1.0
-      azimuth_cone_deg: [5, 20]
-      elevation_cone_deg: [5, 20]
+      azimuth_cone_deg: [0, 10]
+      elevation_cone_deg: [0, 10]
       distance_variation: 0.1       # ±10% distance noise during C2
 
     c3:                             # Orientation only
       enabled: true
       prob: 1.0
       max_angle_deg: 5
-      min_angle_deg: 1
+      min_angle_deg: 0
 
   # Disable everything else for pure camera ablation
   apply_lighting_ablation: false
