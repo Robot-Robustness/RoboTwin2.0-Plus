@@ -19,11 +19,11 @@ domain_randomization:
     c1:                             # Distance scaling
       enabled: true
       prob: 1.0
-      min_scale: 0.7
+      min_scale: 0.85
       max_scale: 1.0
 
     c2:                             # Spherical position (azimuth + elevation)
-      enabled: true
+      enabled: false
       prob: 1.0
       azimuth_cone_deg: [0, 10]
       elevation_cone_deg: [0, 10]

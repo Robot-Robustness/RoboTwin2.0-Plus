@@ -265,7 +265,12 @@ def eval_policy(task_name,
 
         args["render_freq"] = render_freq
 
-        TASK_ENV.setup_demo(now_ep_num=now_id, seed=now_seed, is_test=True, **args)
+        try:
+            TASK_ENV.setup_demo(now_ep_num=now_id, seed=now_seed, is_test=True, **args)
+        except UnStableError:
+            TASK_ENV.close_env()
+            now_seed += 1
+            continue
 
         if perturb == "seen":
             episode_info_list = [episode_info["info"]]
