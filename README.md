@@ -327,11 +327,13 @@ All changes are backward-compatible — existing configs work identically becaus
 
 RoboTwin-Plus is developed by:
 
-**Zhanguang Zhang**¹\*, Zhiyuan Li¹ ², Behnam Rahmati¹, Rui Heng Yang¹, Yintao Ma¹,
-Amir Rasouli¹, Sajjad Pakdamansavoji¹, Yangzheng Wu¹, Lingfeng Zhang¹, Tongtong Cao¹,
-Feng Wen¹, Xinyu Wang¹, Xingyue Quan¹, and **Yingxue Zhang**¹\*
+**Zhanguang Zhang**<sup>1\*</sup>, Zhiyuan Li<sup>1,2</sup>, Behnam Rahmati<sup>1</sup>,
+Rui Heng Yang<sup>1</sup>, Yintao Ma<sup>1</sup>, Amir Rasouli<sup>1</sup>,
+Sajjad Pakdamansavoji<sup>1</sup>, Yangzheng Wu<sup>1</sup>, Lingfeng Zhang<sup>1</sup>,
+Tongtong Cao<sup>1</sup>, Feng Wen<sup>1</sup>, Xinyu Wang<sup>1</sup>,
+Xingyue Quan<sup>1</sup>, and **Yingxue Zhang**<sup>1\*</sup>
 
-¹ Huawei Technologies  ·  ² University of Toronto
+<sup>1</sup> Huawei Technologies  ·  <sup>2</sup> University of Toronto
 
 \* Corresponding authors: `zhanguang.zhang@huawei.com`, `yingxue.zhang@huawei.com`
 Zhiyuan Li contributed during an internship at Huawei Canada.
