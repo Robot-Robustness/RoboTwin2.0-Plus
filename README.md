@@ -1,16 +1,16 @@
 # RoboTwin-Plus: Robustness Testing via Structured Perturbations
 
-> Extending [RoboTwin 2.0](https://github.com/TianxingChen/RoboTwin) with [LIBERO-Plus](https://arxiv.org/abs/2510.13626)-style perturbation categories for evaluating VLA robustness.
+> The official benchmark from **[Do World Action Models Generalize Better than VLAs? A Robustness Study](https://arxiv.org/abs/2603.22078)** — a structured perturbation suite for evaluating the robustness of Vision-Language-Action (VLA) and World Action Model (WAM) policies.
 
 [![Paper](https://img.shields.io/badge/arXiv-2603.22078-b31b1b.svg)](https://arxiv.org/abs/2603.22078)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Based on RoboTwin 2.0](https://img.shields.io/badge/based%20on-RoboTwin%202.0-informational)](https://github.com/TianxingChen/RoboTwin)
-[![Perturbation coverage](https://img.shields.io/badge/LIBERO--Plus%20coverage-21%2F21-brightgreen)](https://arxiv.org/abs/2510.13626)
+[![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2021%20sub--dims-brightgreen)](#libero-plus-reference-taxonomy)
 
-RoboTwin-Plus adds **7 structured perturbation dimensions (21 sub-dimensions)** on top of
-RoboTwin 2.0's bimanual manipulation suite, so you can stress-test Vision-Language-Action
-(VLA) policies across objects, background, lighting, camera, robot state, language, and
-sensor noise — all config-driven and backward compatible with upstream RoboTwin.
+RoboTwin-Plus provides **7 structured perturbation dimensions (21 sub-dimensions)** — objects,
+background, lighting, camera, robot state, language, and sensor noise — applied per episode
+through declarative configs to measure how VLA/WAM policies degrade under distribution shift.
+It is built on the RoboTwin 2.0 platform and remains backward compatible with it (see
+[Repository Structure](#repository-structure) for the lineage).
 
 **Contents:** [Installation](#installation) · [Quick Start](#quick-start) ·
 [Perturbation Taxonomy](#libero-plus-reference-taxonomy) · [Configs](#all-19-yaml-config-files) ·
