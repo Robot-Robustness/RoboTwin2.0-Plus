@@ -88,21 +88,35 @@
   .abstract p{font-family:var(--serif);font-size:18.5px;line-height:1.72;text-align:justify;
     hyphens:auto;color:var(--ink);max-width:72ch}
 
-  /* ---- figure: taxonomy ---- */
+  /* ---- figure: perturbation cards (2 × 4) ---- */
   figure{margin:0}
-  .fig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;
-    border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--paper)}
-  .dim{padding:18px 18px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .dim .code{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.1em;
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:880px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:460px){.pgrid{grid-template-columns:1fr}}
+  .pcard{border:1px solid var(--line-strong);border-radius:12px;overflow:hidden;background:var(--paper);
+    display:flex;flex-direction:column;transition:transform .14s ease,box-shadow .14s ease}
+  .pcard:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,22,30,.10)}
+  .pcard figure,.pcard>img{margin:0}
+  .pcard .thumb{display:block;width:100%;aspect-ratio:311/227;object-fit:cover;
+    border-bottom:1px solid var(--line);background:var(--chip)}
+  .pcard.clean{outline:2px solid var(--accent);outline-offset:-2px}
+  .pcard .body{padding:13px 15px 15px}
+  .pcard .code{font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.1em;
     text-transform:uppercase;color:var(--accent-ink)}
-  .dim h3{margin:7px 0 5px;font-family:var(--serif);font-weight:600;font-size:18px}
-  .dim p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted)}
-  .dim .subs{margin-top:11px;display:flex;gap:5px;flex-wrap:wrap}
-  .dim .subs span{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--chip);
+  .pcard h3{margin:6px 0 5px;font-family:var(--serif);font-weight:600;font-size:17px}
+  .pcard p{margin:0;font-size:13px;line-height:1.5;color:var(--muted)}
+  .pcard .subs{margin-top:11px;display:flex;gap:5px;flex-wrap:wrap}
+  .pcard .subs span{font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--chip);
     border:1px solid var(--line);border-radius:5px;padding:3px 6px}
-  .dim.clean{background:var(--accent-soft)}
-  figcaption{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.55;text-align:center}
+  figcaption{font-size:13.5px;color:var(--muted);margin-top:16px;line-height:1.55;text-align:center}
   figcaption b{color:var(--ink);font-weight:600}
+  .taxsub{font-size:14px;color:var(--muted);max-width:70ch;margin:40px 0 16px}
+  .taxsub b{color:var(--ink);font-weight:650}
+  td.dimcell{font-weight:600;color:var(--ink);white-space:nowrap;vertical-align:top;
+    border-right:1px solid var(--line)}
+  td.codecell{font-family:var(--mono);font-size:12.5px;color:var(--accent-ink);white-space:nowrap}
+  .tax td{font-size:13.5px;line-height:1.5;vertical-align:top}
+  .tax td.detail{color:var(--muted)}
 
   /* ---- code ---- */
   pre{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:20px 22px;
@@ -199,34 +213,59 @@
     <p class="eyebrow">Perturbation Suite</p>
     <h2>Seven dimensions, twenty-one sub-dimensions</h2>
     <figure>
-      <div class="fig-grid">
-        <div class="dim"><span class="code">Objects</span><h3>Layout &amp; pose</h3>
-          <p>Confounding distractor objects and target-object pose perturbation.</p>
-          <div class="subs"><span>O1</span><span>O2</span></div></div>
-        <div class="dim"><span class="code">Background</span><h3>Scene textures</h3>
-          <p>Scene-theme textures plus surface and tabletop material randomization.</p>
-          <div class="subs"><span>B1</span><span>B2</span></div></div>
-        <div class="dim"><span class="code">Lighting</span><h3>Light conditions</h3>
-          <p>Diffuse color, direction, specular highlights, and shadow manipulation.</p>
-          <div class="subs"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div></div>
-        <div class="dim"><span class="code">Camera</span><h3>Viewpoints</h3>
-          <p>Distance, spherical position, and orientation perturbation.</p>
-          <div class="subs"><span>C1</span><span>C2</span><span>C3</span></div></div>
-        <div class="dim"><span class="code">Robot</span><h3>Initial state</h3>
-          <p>Gaussian noise on initial joint angles plus gripper extremes.</p>
-          <div class="subs"><span>σ = 0.1 rad</span></div></div>
-        <div class="dim"><span class="code">Language</span><h3>Instructions</h3>
-          <p>Distraction, common-sense rewording, and reasoning-chain rephrasing.</p>
-          <div class="subs"><span>R1</span><span>R2</span><span>R3</span></div></div>
-        <div class="dim"><span class="code">Sensor</span><h3>Noise</h3>
-          <p>Motion blur, gaussian blur, zoom blur, fog, and glass blur.</p>
-          <div class="subs"><span>N1</span><span>N2</span><span>N3</span><span>N4</span><span>N5</span></div></div>
-        <div class="dim clean"><span class="code">Baseline</span><h3>Clean</h3>
-          <p>Deterministic layout, default lighting and camera, original instructions.</p>
-          <div class="subs"><span>demo_clean</span></div></div>
+      <div class="pgrid">
+        <div class="pcard clean">
+          <img class="thumb" src="img/pert/clean.png" alt="Clean baseline head-camera view" loading="lazy">
+          <div class="body"><span class="code">Baseline</span><h3>Clean</h3>
+            <p>Deterministic layout, default lighting and camera, original instructions.</p>
+            <div class="subs"><span>demo_clean</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/noise.png" alt="Sensor-noise perturbed view" loading="lazy">
+          <div class="body"><span class="code">Sensor Noise</span><h3>Photometric noise</h3>
+            <p>Motion, gaussian, zoom, glass blur, and fog on camera observations.</p>
+            <div class="subs"><span>N1</span><span>N2</span><span>N3</span><span>N4</span><span>N5</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/light.png" alt="Lighting perturbed view" loading="lazy">
+          <div class="body"><span class="code">Lighting</span><h3>Light conditions</h3>
+            <p>Diffuse color, direction, specular highlights, and shadow toggling.</p>
+            <div class="subs"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/camera.png" alt="Camera-viewpoint perturbed view" loading="lazy">
+          <div class="body"><span class="code">Camera</span><h3>Viewpoints</h3>
+            <p>Head-camera viewpoint pose: distance, spherical position, orientation.</p>
+            <div class="subs"><span>C1</span><span>C2</span><span>C3</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/robot.png" alt="Robot initial-state perturbed view" loading="lazy">
+          <div class="body"><span class="code">Robot</span><h3>Initial state</h3>
+            <p>Gaussian noise on initial joint angles plus gripper extremes.</p>
+            <div class="subs"><span>σ = 0.1 rad</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/background.png" alt="Background perturbed view" loading="lazy">
+          <div class="body"><span class="code">Background</span><h3>Scene textures</h3>
+            <p>Wall, floor, and table textures, colors, and surface materials.</p>
+            <div class="subs"><span>B1</span><span>B2</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/objects.png" alt="Objects-layout perturbed view" loading="lazy">
+          <div class="body"><span class="code">Objects</span><h3>Layout &amp; pose</h3>
+            <p>Task-irrelevant distractor objects and target-object pose noise.</p>
+            <div class="subs"><span>O1</span><span>O2</span></div></div>
+        </div>
+        <div class="pcard">
+          <img class="thumb" src="img/pert/language.png" alt="Language perturbed view" loading="lazy">
+          <div class="body"><span class="code">Language</span><h3>Instructions</h3>
+            <p>Distraction, common-sense rewording, and reasoning-chain rephrasing.</p>
+            <div class="subs"><span>R1</span><span>R2</span><span>R3</span></div></div>
+        </div>
       </div>
-      <figcaption><b>Figure 1.</b> The seven perturbation dimensions applied per episode, with the
-        clean baseline for reference. Coverage is <b>21 / 21</b> LIBERO-Plus sub-dimensions.</figcaption>
+      <figcaption><b>Figure 1.</b> Example head-camera observations for the clean baseline and each
+        perturbation dimension. Coverage is <b>21 / 21</b> sub-dimensions implemented
+        (20 active by default; C2 disabled to avoid instability).</figcaption>
     </figure>
   </div>
 </section>
@@ -253,19 +292,61 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
   <div class="col">
     <p class="eyebrow">Evaluation Protocol</p>
     <h2>One baseline, seven branches</h2>
+    <p class="lead">A full evaluation uses <b>8 configs</b> per task: one clean baseline plus seven
+      perturbation branches. Each branch activates exactly one dimension while holding the others
+      at their clean defaults, isolating its effect on policy performance. Each config runs 50
+      episodes per task, across all 50 RoboTwin&nbsp;2.0 dual-arm tasks.</p>
     <div class="tbl-wrap">
       <table>
-        <caption>Table 1. The eight configs for a full LIBERO-Plus-style robustness sweep, over any of the 50 tasks.</caption>
-        <thead><tr><th>#</th><th>Branch</th><th>Config</th><th>Tests</th></tr></thead>
+        <caption>Table 1. The eight evaluation configs — one clean baseline and seven single-dimension branches.</caption>
+        <thead><tr><th>#</th><th>Config</th><th>Perturbation</th><th>Active sub-dimensions</th></tr></thead>
         <tbody>
-          <tr><td><span class="num">0</span></td><td>Clean baseline</td><td><code>demo_clean</code></td><td>No perturbation</td></tr>
-          <tr><td><span class="num">1</span></td><td>Sensor noise</td><td><code>demo_vision_noise</code></td><td>N1–N5 blur / fog</td></tr>
-          <tr><td><span class="num">2</span></td><td>Lighting</td><td><code>demo_light</code></td><td>L1–L4 light &amp; shadow</td></tr>
-          <tr><td><span class="num">3</span></td><td>Camera</td><td><code>demo_camera</code></td><td>C1–C3 viewpoint</td></tr>
-          <tr><td><span class="num">4</span></td><td>Robot state</td><td><code>demo_robot_state</code></td><td>Initial joint noise</td></tr>
-          <tr><td><span class="num">5</span></td><td>Background</td><td><code>demo_background_plus</code></td><td>B1+/B2 color &amp; material</td></tr>
-          <tr><td><span class="num">6</span></td><td>Objects</td><td><code>demo_objects_plus</code></td><td>O1+/O2 distractors &amp; pose</td></tr>
-          <tr><td><span class="num">7</span></td><td>Language</td><td><code>demo_language_plus</code></td><td>R1+R2+R3 instructions</td></tr>
+          <tr><td><span class="num">0</span></td><td><code>demo_clean</code></td><td>None (clean baseline)</td><td>—</td></tr>
+          <tr><td><span class="num">1</span></td><td><code>demo_vision_noise</code></td><td>Sensor Noise</td><td>N1–N5 (cycled per episode)</td></tr>
+          <tr><td><span class="num">2</span></td><td><code>demo_light</code></td><td>Lighting</td><td>L1 (always) + L2 / L3 / L4 (stochastic)</td></tr>
+          <tr><td><span class="num">3</span></td><td><code>demo_camera</code></td><td>Camera Viewpoints</td><td>C1 + C3 (C2 disabled by default)</td></tr>
+          <tr><td><span class="num">4</span></td><td><code>demo_robot_state</code></td><td>Robot Initial State</td><td>Joint noise + gripper extremes</td></tr>
+          <tr><td><span class="num">5</span></td><td><code>demo_background_plus</code></td><td>Background</td><td>B1 (texture + color tint) + B2</td></tr>
+          <tr><td><span class="num">6</span></td><td><code>demo_objects_plus</code></td><td>Objects Layout</td><td>O1 (variable count) + O2 (pose)</td></tr>
+          <tr><td><span class="num">7</span></td><td><code>demo_language_plus</code></td><td>Language</td><td>R1 + R2 + R3 (combined)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="taxsub"><b>Perturbation taxonomy.</b> Each dimension decomposes into sub-dimensions,
+      individually configurable via YAML flags for combined or ablation-style evaluation. Table 2
+      lists all 21 sub-dimensions with implementation-level parameters.</p>
+    <div class="tbl-wrap">
+      <table class="tax">
+        <caption>Table 2. RoboTwin-Plus perturbation taxonomy — 21 sub-dimensions across 7 dimensions, with parameter details.</caption>
+        <thead><tr><th>Dimension</th><th>Code</th><th>Sub-dimension</th><th>Implementation details</th></tr></thead>
+        <tbody>
+          <tr><td class="dimcell" rowspan="5">Sensor Noise</td><td class="codecell">N1</td><td>Motion blur</td><td class="detail">Gaussian kernel (r ∈ [3, 15], σ ∈ [1, 8]), rotated by a random angle ∈ [−30°, 30°]</td></tr>
+          <tr><td class="codecell">N2</td><td>Gaussian blur</td><td class="detail">Isotropic Gaussian (σ ∈ [1, 10])</td></tr>
+          <tr><td class="codecell">N3</td><td>Zoom blur</td><td class="detail">Multi-scale warp accumulation (s ∈ [1.0, 1.56], step ∈ [0.01, 0.03])</td></tr>
+          <tr><td class="codecell">N4</td><td>Fog</td><td class="detail">Homogeneous white fog with transmittance e<sup>−αd</sup> (α ∈ [0.3, 1.5], d = 3)</td></tr>
+          <tr><td class="codecell">N5</td><td>Glass blur</td><td class="detail">Pixel displacement (δ ∈ [1, 5] px) + Gaussian (σ ∈ [0.5, 2.5]), 1–3 iterations</td></tr>
+
+          <tr><td class="dimcell" rowspan="4">Light Conditions</td><td class="codecell">L1</td><td>Diffuse color</td><td class="detail">Per-channel RGB tint ∈ [0.0, 3.5] applied to all directional and point lights (always on)</td></tr>
+          <tr><td class="codecell">L2</td><td>Direction</td><td class="detail">Spherical re-sampling: θ ∈ [8°, 82°], φ ∈ [0, 2π]; 35% chance of dramatic side lighting (θ ∈ [68°, 82°]). Linked with L4</td></tr>
+          <tr><td class="codecell">L3</td><td>Specular</td><td class="detail">Material specular strength ∈ [0.3, 6.0], shininess ∈ [10, 250]; all scene actors (50% chance per episode)</td></tr>
+          <tr><td class="codecell">L4</td><td>Shadows</td><td class="detail">Directional-light shadow on/off (50% chance); co-activated with L2</td></tr>
+
+          <tr><td class="dimcell" rowspan="3">Camera Viewpoints</td><td class="codecell">C1</td><td>Distance</td><td class="detail">Distance scaling ∈ [0.85, 1.0] × original (head camera only)</td></tr>
+          <tr><td class="codecell">C2</td><td>Spherical position</td><td class="detail">Azimuth / elevation ± 10° + ± 10% distance variation (disabled by default)</td></tr>
+          <tr><td class="codecell">C3</td><td>Orientation</td><td class="detail">Yaw / pitch / roll each ∈ [0°, 5°] with random sign</td></tr>
+
+          <tr><td class="dimcell">Robot Init States</td><td class="codecell">—</td><td>Joint perturbation</td><td class="detail">Gaussian noise (std = 0.1 rad, clip ± 0.225 rad) on all joints of both arms; gripper set to extreme (0.05 or 0.95) with p = 0.25</td></tr>
+
+          <tr><td class="dimcell" rowspan="2">Background Textures</td><td class="codecell">B1</td><td>Scene theme</td><td class="detail">Wall + floor RGB color tint, per-channel multiplier ∈ [0.4, 1.8]; combined with upstream texture swap</td></tr>
+          <tr><td class="codecell">B2</td><td>Surface appearance</td><td class="detail">Table material: metallic ∈ [0.0, 0.8], roughness ∈ [0.05, 0.95], per-channel color tint ∈ [0.4, 1.8]</td></tr>
+
+          <tr><td class="dimcell" rowspan="2">Objects Layout</td><td class="codecell">O1</td><td>Distractor objects</td><td class="detail">Variable count per episode (3–15 objects, vs. fixed 10 in upstream)</td></tr>
+          <tr><td class="codecell">O2</td><td>Target pose</td><td class="detail">Position: Gaussian noise (σ = 2 cm, x/y only); orientation: uniform yaw ± 15°</td></tr>
+
+          <tr><td class="dimcell" rowspan="3">Language Instructions</td><td class="codecell">R1</td><td>Distraction</td><td class="detail">Irrelevant conversational wrapping (~30% of combined episodes)</td></tr>
+          <tr><td class="codecell">R2</td><td>Common-sense rewording</td><td class="detail">Object names → functional descriptions, verb synonyms (~50%)</td></tr>
+          <tr><td class="codecell">R3</td><td>Reasoning chain</td><td class="detail">Imperative → goal-state / outcome description (~20%)</td></tr>
         </tbody>
       </table>
     </div>
