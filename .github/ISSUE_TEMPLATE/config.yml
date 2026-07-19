@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: RoboTwin 2.0 (upstream)
+    url: https://robotwin-platform.github.io/doc/
+    about: For questions about the base simulator, installation, or the original task suite.
+  - name: LIBERO-Plus paper
+    url: https://arxiv.org/abs/2510.13626
+    about: Reference taxonomy for the perturbation dimensions.

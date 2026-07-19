@@ -2,6 +2,55 @@
 
 > Extending [RoboTwin 2.0](https://github.com/TianxingChen/RoboTwin) with [LIBERO-Plus](https://arxiv.org/abs/2510.13626)-style perturbation categories for evaluating VLA robustness.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Based on RoboTwin 2.0](https://img.shields.io/badge/based%20on-RoboTwin%202.0-informational)](https://github.com/TianxingChen/RoboTwin)
+[![Perturbation coverage](https://img.shields.io/badge/LIBERO--Plus%20coverage-21%2F21-brightgreen)](https://arxiv.org/abs/2510.13626)
+
+RoboTwin-Plus adds **7 structured perturbation dimensions (21 sub-dimensions)** on top of
+RoboTwin 2.0's bimanual manipulation suite, so you can stress-test Vision-Language-Action
+(VLA) policies across objects, background, lighting, camera, robot state, language, and
+sensor noise — all config-driven and backward compatible with upstream RoboTwin.
+
+**Contents:** [Installation](#installation) · [Quick Start](#quick-start) ·
+[Perturbation Taxonomy](#libero-plus-reference-taxonomy) · [Configs](#all-19-yaml-config-files) ·
+[Repository Structure](#repository-structure) · [Contributing](CONTRIBUTING.md) ·
+[Citing](#citation)
+
+---
+
+## Installation
+
+RoboTwin-Plus uses the same environment as RoboTwin 2.0.
+
+```bash
+# 1. Clone
+git clone https://github.com/markli1hoshipu/Robotwin-plus.git
+cd Robotwin-plus
+
+# 2. Create a Python 3.10 environment (conda recommended)
+conda create -n RoboTwin python=3.10 -y
+conda activate RoboTwin
+
+# 3. Install dependencies (torch, sapien, mplib, curobo, pytorch3d, ...)
+#    Takes ~20 min. See script/_install.sh for the exact steps it applies.
+bash script/_install.sh
+
+# 4. Download assets (embodiments, objects, background textures) from HuggingFace
+bash script/_download_assets.sh
+```
+
+For the authoritative, step-by-step base install (including troubleshooting), see the
+[RoboTwin 2.0 install guide](https://robotwin-platform.github.io/doc/usage/robotwin-install.html).
+A GPU is required for data collection and evaluation.
+
+> **Optional — policy baselines & description generation.** Training/evaluating the VLA
+> baselines under `policy/` and running the LLM-based instruction generator in
+> `description/` need extra dependencies and API keys (set via environment variables,
+> e.g. `AZURE_API_KEY`). These are not required just to collect perturbed data.
+
+The full upstream RoboTwin README is preserved at
+[`README_UPSTREAM.md`](README_UPSTREAM.md).
+
 ---
 
 ## LIBERO-Plus Reference Taxonomy
@@ -241,6 +290,12 @@ This repo has 3 layered commits:
 
 All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
 
+> **Note on `policy/`.** The `policy/` directory (ACT, DP, DP3, RDT, pi0, OpenVLA-OFT,
+> TinyVLA, DexVLA, …) is **inherited from RoboTwin 2.0** and vendors third-party VLA
+> baselines, each under its own upstream license. RoboTwin-Plus does not modify these
+> backends — they're kept so you can evaluate policies against the perturbed data. See
+> [`NOTICE`](NOTICE) for the full lineage and per-component attribution.
+
 ### Key modified files (vs upstream)
 | File | What changed |
 |------|-------------|
@@ -265,3 +320,40 @@ All changes are backward-compatible — existing configs work identically becaus
 - LIBERO-Plus GitHub: https://github.com/sylvestf/LIBERO-plus
 - RoboTwin 2.0: https://robotwin-platform.github.io/
 - RoboTwin GitHub: https://github.com/TianxingChen/RoboTwin
+
+---
+
+## Citation
+
+If you use RoboTwin-Plus, please cite this repository (see [`CITATION.cff`](CITATION.cff))
+along with the upstream works it builds on:
+
+```bibtex
+@software{robotwin_plus,
+  title  = {RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations},
+  author = {{RoboTwin-Plus contributors}},
+  year   = {2025},
+  url    = {https://github.com/markli1hoshipu/Robotwin-plus}
+}
+
+@article{robotwin2,
+  title   = {RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain
+             Randomization for Robust Bimanual Robotic Manipulation},
+  author  = {Chen, Tianxing and others},
+  journal = {arXiv preprint arXiv:2506.18088},
+  year    = {2025}
+}
+```
+
+---
+
+## License & Attribution
+
+RoboTwin-Plus is released under the [MIT License](LICENSE). It is a derivative work of
+RoboTwin 2.0; see [`NOTICE`](NOTICE) for full attribution, the three-layer lineage, and a
+summary of modifications. Bundled baselines under `policy/` retain their own licenses.
+
+## Contributing
+
+Contributions are welcome — see [`CONTRIBUTING.md`](CONTRIBUTING.md) and our
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).

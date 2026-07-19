@@ -1,0 +1,62 @@
+RoboTwin-Plus
+=============
+
+RoboTwin-Plus is a derivative work built on top of RoboTwin 2.0, extended with
+LIBERO-Plus-style structured perturbation categories for evaluating the
+robustness of Vision-Language-Action (VLA) policies.
+
+This software is distributed under the MIT License (see LICENSE).
+
+-------------------------------------------------------------------------------
+Lineage / attribution
+-------------------------------------------------------------------------------
+
+This project builds on the following upstream work, layered in three stages:
+
+1. Upstream: RoboTwin 2.0
+   Copyright (c) 2025 Tianxing Chen and the RoboTwin authors.
+   https://github.com/TianxingChen/RoboTwin
+   https://robotwin-platform.github.io/
+   Licensed under the MIT License.
+
+   The great majority of this repository (the simulation environments in
+   envs/, the task suite, the policy baselines in policy/, code generation in
+   code_gen/, and the description pipeline in description/) originates from
+   RoboTwin 2.0 and remains the work of its original authors.
+
+2. Perturbation extensions
+   Sensor noise (N1-N5), lighting (L1-L4), camera viewpoints (C1-C3),
+   robot initial-state perturbation, and language distraction (R1).
+
+3. RoboTwin-Plus additions
+   Copyright (c) 2025 RoboTwin-Plus contributors.
+   Background B1+/B2, objects O1+/O2, and language R2/R3 perturbations, plus
+   the config set and documentation in this repository.
+
+-------------------------------------------------------------------------------
+Bundled third-party components
+-------------------------------------------------------------------------------
+
+The policy/ directory vendors third-party VLA / imitation-learning baselines
+(ACT, Diffusion Policy, DP3, RDT, pi0, OpenVLA-OFT, TinyVLA, DexVLA, and
+others). Each retains its own upstream license and copyright; this repository
+redistributes them for convenience only. Refer to each subdirectory for the
+applicable license.
+
+-------------------------------------------------------------------------------
+Summary of modifications vs. RoboTwin 2.0
+-------------------------------------------------------------------------------
+
+  envs/_base_task.py
+      Sensor-noise / lighting / camera / robot-init perturbation dispatch,
+      plus B1+/B2 background and O1+/O2 object perturbation parsing.
+  envs/camera/camera.py
+      Camera ablation support (C1/C2/C3).
+  envs/utils/create_actor.py
+      create_table() accepts surface_params for B2 material randomization.
+  description/utils/generate_episode_instructions.py
+      Language perturbation dispatch (R1 distraction + R2/R3).
+  description/task_instruction_plus/*.json
+      2,500 pre-generated R1/R2/R3 instruction variants (50 tasks x 50).
+  task_config/demo_*.yml
+      Perturbation configs for each dimension (see README.md).

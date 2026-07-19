@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use RoboTwin-Plus in your research, please cite this repository as well as the upstream RoboTwin 2.0 and LIBERO-Plus works listed below."
+title: "RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations"
+abstract: >-
+  RoboTwin-Plus extends the RoboTwin 2.0 bimanual manipulation platform with
+  LIBERO-Plus-style structured perturbation categories (objects, background,
+  lighting, camera, robot state, language, sensor noise) for systematically
+  evaluating the robustness of Vision-Language-Action policies.
+authors:
+  - name: "RoboTwin-Plus contributors"
+type: software
+license: MIT
+url: "https://github.com/markli1hoshipu/Robotwin-plus"
+repository-code: "https://github.com/markli1hoshipu/Robotwin-plus"
+keywords:
+  - robotics
+  - manipulation
+  - vision-language-action
+  - robustness
+  - benchmark
+  - domain-randomization
+references:
+  - type: article
+    title: "RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation"
+    authors:
+      - name: "Tianxing Chen and the RoboTwin authors"
+    url: "https://arxiv.org/abs/2506.18088"
+    year: 2025
+  - type: article
+    title: "LIBERO-Plus"
+    authors:
+      - name: "LIBERO-Plus authors"
+    url: "https://arxiv.org/abs/2510.13626"
+    year: 2025
