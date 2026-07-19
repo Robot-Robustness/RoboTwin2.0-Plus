@@ -3,202 +3,313 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RoboTwin-Plus — Robustness Testing for VLA Policies</title>
+<title>RoboTwin-Plus — Robustness Testing for VLA Policies via Structured Perturbations</title>
 <meta name="description" content="RoboTwin-Plus extends RoboTwin 2.0 with LIBERO-Plus-style structured perturbations for evaluating Vision-Language-Action policy robustness.">
 <style>
   :root{
-    --bg:#f7f8fa; --panel:#ffffff; --ink:#1a1d24; --muted:#5b6270;
-    --border:#e5e8ee; --accent:#4f46e5; --accent-soft:#eef0fe;
-    --code-bg:#0f1320; --code-ink:#e6e9f2; --ok:#0a7d47;
-    --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.05);
-    --maxw:1080px;
+    --paper:#fcfbf8; --ink:#1a1c22; --muted:#61656f; --faint:#8a8e98;
+    --line:#e5e3db; --line-strong:#d8d5cb;
+    --accent:#2b45c4; --accent-ink:#243a9e; --accent-soft:#eceef9;
+    --chip:#f1efe7; --code-bg:#1a1c25; --code-ink:#e7e8ee; --code-faint:#8b90a3;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --col:820px;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#0d1017; --panel:#141922; --ink:#e8ebf2; --muted:#9aa3b2;
-      --border:#232a36; --accent:#8b8cf9; --accent-soft:#1b1f36;
-      --code-bg:#0a0d14; --code-ink:#e6e9f2; --ok:#3ecf8e;
-      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.35);
+      --paper:#121319; --ink:#e9e8e3; --muted:#9a9ba3; --faint:#767988;
+      --line:#272935; --line-strong:#333644;
+      --accent:#8b9dff; --accent-ink:#a6b3ff; --accent-soft:#1a1e30;
+      --chip:#1c1e27; --code-bg:#0c0d13; --code-ink:#e7e8ee; --code-faint:#767b90;
     }
   }
+  :root[data-theme="light"]{
+    --paper:#fcfbf8; --ink:#1a1c22; --muted:#61656f; --faint:#8a8e98;
+    --line:#e5e3db; --line-strong:#d8d5cb;
+    --accent:#2b45c4; --accent-ink:#243a9e; --accent-soft:#eceef9;
+    --chip:#f1efe7; --code-bg:#1a1c25; --code-ink:#e7e8ee; --code-faint:#8b90a3;
+  }
+  :root[data-theme="dark"]{
+    --paper:#121319; --ink:#e9e8e3; --muted:#9a9ba3; --faint:#767988;
+    --line:#272935; --line-strong:#333644;
+    --accent:#8b9dff; --accent-ink:#a6b3ff; --accent-soft:#1a1e30;
+    --chip:#1c1e27; --code-bg:#0c0d13; --code-ink:#e7e8ee; --code-faint:#767b90;
+  }
+
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased}
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
-  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:var(--accent-ink);text-underline-offset:2px;text-decoration-color:color-mix(in srgb,var(--accent-ink) 40%,transparent)}
+  a:hover{text-decoration-color:var(--accent-ink)}
+  .col{max-width:var(--col);margin:0 auto;padding:0 24px}
+  code,pre,.mono{font-family:var(--mono)}
 
-  header.hero{padding:72px 0 48px;text-align:center;
-    background:radial-gradient(1200px 400px at 50% -100px,var(--accent-soft),transparent)}
-  .badge-plus{display:inline-block;font-size:13px;font-weight:600;color:var(--accent);
-    background:var(--accent-soft);border:1px solid var(--border);border-radius:999px;
-    padding:5px 14px;margin-bottom:18px}
-  h1{font-size:clamp(34px,6vw,56px);line-height:1.05;margin:0 0 14px;letter-spacing:-.02em}
-  h1 .plus{color:var(--accent)}
-  .tagline{font-size:clamp(17px,2.6vw,21px);color:var(--muted);max-width:680px;margin:0 auto 28px}
-  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
-  .btn{display:inline-block;padding:11px 20px;border-radius:10px;font-weight:600;font-size:15px;
-    border:1px solid var(--border)}
-  .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
-  .btn.primary:hover{filter:brightness(1.07);text-decoration:none}
-  .btn.ghost{background:var(--panel);color:var(--ink)}
-  .btn.ghost:hover{border-color:var(--accent);text-decoration:none}
-  .pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-  .pill{border:1px solid var(--border);background:var(--panel);border-radius:999px;padding:4px 12px}
+  /* ---- eyebrow / section headings ---- */
+  .eyebrow{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent-ink);margin:0 0 14px}
+  h2{font-family:var(--serif);font-weight:600;font-size:27px;line-height:1.2;letter-spacing:-.01em;
+    margin:0 0 18px;text-wrap:balance}
+  h3{font-family:var(--sans);font-weight:650;font-size:16px;margin:0}
+  p{margin:0 0 16px}
 
-  section{padding:44px 0}
-  h2{font-size:clamp(24px,3.4vw,32px);margin:0 0 8px;letter-spacing:-.01em}
-  .sub{color:var(--muted);margin:0 0 26px;max-width:720px}
+  /* ---- header ---- */
+  header{padding:76px 0 8px;text-align:center;border-bottom:1px solid var(--line)}
+  .kicker{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--faint);margin:0 0 22px}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(32px,5.4vw,50px);line-height:1.1;
+    letter-spacing:-.02em;margin:0 auto 8px;max-width:15ch;text-wrap:balance}
+  h1 .plus{color:var(--accent-ink);font-style:italic}
+  .subtitle{font-family:var(--serif);font-style:italic;font-size:clamp(18px,2.6vw,22px);
+    color:var(--muted);margin:0 auto 30px;max-width:44ch;text-wrap:balance}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;
-    padding:20px;box-shadow:var(--shadow)}
-  .card .dim{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
-  .card h3{margin:8px 0 6px;font-size:18px}
-  .card p{margin:0;color:var(--muted);font-size:14px}
-  .codes{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
-  .codes span{font:600 12px/1 ui-monospace,monospace;background:var(--accent-soft);color:var(--accent);
-    border-radius:6px;padding:5px 8px;border:1px solid var(--border)}
+  .authors{font-size:16.5px;line-height:1.9;margin:0 auto 6px;max-width:62ch;color:var(--ink)}
+  .authors sup{font-size:.66em;color:var(--accent-ink);font-weight:600}
+  .authors .corr{border-bottom:1px dotted var(--faint)}
+  .affil{font-size:14.5px;color:var(--muted);margin:6px auto 4px}
+  .affil sup{color:var(--accent-ink);font-weight:600}
+  .contact{font-size:13.5px;color:var(--faint);margin:0 auto 30px;max-width:60ch}
+  .contact code{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
 
-  pre{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:18px 20px;
-    overflow-x:auto;font-size:13.5px;line-height:1.7;border:1px solid var(--border)}
-  pre .c{color:#7c8499}
-  pre .g{color:#3ecf8e}
+  /* ---- link buttons ---- */
+  .links{display:flex;flex-wrap:wrap;gap:11px;justify-content:center;padding-bottom:40px}
+  .lnk{display:inline-flex;align-items:center;gap:8px;font-family:var(--sans);font-size:14.5px;
+    font-weight:550;text-decoration:none;color:var(--paper);background:var(--ink);
+    border:1px solid var(--ink);border-radius:999px;padding:9px 18px;transition:transform .12s ease,background .12s ease}
+  .lnk:hover{transform:translateY(-1px)}
+  .lnk.alt{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+  .lnk.alt:hover{border-color:var(--accent-ink);color:var(--accent-ink)}
+  .lnk svg{width:16px;height:16px;flex:none}
 
-  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
-  table{border-collapse:collapse;width:100%;min-width:560px;background:var(--panel);font-size:14px}
-  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border)}
-  th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
-  tr:last-child td{border-bottom:none}
-  td code{background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:2px 6px;font-size:12.5px}
+  /* ---- sections ---- */
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  .lead{font-family:var(--serif);font-size:19px;line-height:1.7;color:var(--ink)}
+  .abstract p{font-family:var(--serif);font-size:18.5px;line-height:1.72;text-align:justify;
+    hyphens:auto;color:var(--ink)}
 
-  footer{border-top:1px solid var(--border);padding:34px 0 60px;color:var(--muted);font-size:14px}
-  footer a{color:var(--muted);text-decoration:underline}
-  .note{font-size:13px;color:var(--muted);margin-top:12px}
+  /* ---- figure: taxonomy ---- */
+  figure{margin:0}
+  .fig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;
+    border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--paper)}
+  .dim{padding:18px 18px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dim .code{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--accent-ink)}
+  .dim h3{margin:7px 0 5px;font-family:var(--serif);font-weight:600;font-size:18px}
+  .dim p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+  .dim .subs{margin-top:11px;display:flex;gap:5px;flex-wrap:wrap}
+  .dim .subs span{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--chip);
+    border:1px solid var(--line);border-radius:5px;padding:3px 6px}
+  .dim.clean{background:var(--accent-soft)}
+  figcaption{font-size:13.5px;color:var(--muted);margin-top:14px;line-height:1.55;text-align:center}
+  figcaption b{color:var(--ink);font-weight:600}
+
+  /* ---- code ---- */
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:20px 22px;
+    overflow-x:auto;font-size:13.5px;line-height:1.75;margin:0;border:1px solid rgba(255,255,255,.05)}
+  pre .c{color:var(--code-faint)}
+  pre .k{color:#8b9dff}
+  .hint{font-size:14px;color:var(--muted);margin:14px 0 0}
+  .hint code,p code,li code{font-family:var(--mono);font-size:13px;background:var(--chip);
+    border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink)}
+
+  /* ---- table ---- */
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--line-strong);border-radius:10px}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-family:var(--sans);font-size:14.5px}
+  caption{caption-side:top;text-align:left;font-size:13.5px;color:var(--muted);padding:0 0 12px}
+  th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line)}
+  thead th{font-family:var(--sans);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--faint);font-weight:650;background:color-mix(in srgb,var(--ink) 4%,var(--paper))}
+  tbody tr:last-child td{border-bottom:none}
+  td .num{font-variant-numeric:tabular-nums;color:var(--faint);font-family:var(--mono);font-size:13px}
+  td code{font-family:var(--mono);font-size:12.5px;background:var(--chip);border:1px solid var(--line);
+    border-radius:5px;padding:2px 7px;color:var(--accent-ink)}
+
+  /* ---- bibtex ---- */
+  .bib{background:var(--code-bg);color:var(--code-ink);border-radius:10px;padding:20px 22px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.7;white-space:pre;
+    border:1px solid rgba(255,255,255,.05)}
+
+  footer{padding:40px 0 72px;font-size:13.5px;color:var(--muted);line-height:1.6}
+  footer .col > p{margin:0 0 12px}
+  footer a{color:var(--muted)}
+  footer .meta{color:var(--faint);font-size:12.5px}
+
+  /* ---- entrance ---- */
+  @media (prefers-reduced-motion:no-preference){
+    .reveal{opacity:0;transform:translateY(10px);animation:rise .6s cubic-bezier(.2,.6,.2,1) forwards}
+    .reveal.d1{animation-delay:.06s}.reveal.d2{animation-delay:.13s}
+    .reveal.d3{animation-delay:.2s}.reveal.d4{animation-delay:.27s}
+    @keyframes rise{to{opacity:1;transform:none}}
+  }
+  a:focus-visible,.lnk:focus-visible{outline:2px solid var(--accent-ink);outline-offset:3px;border-radius:6px}
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="wrap">
-    <span class="badge-plus">21 / 21 LIBERO-Plus sub-dimensions</span>
-    <h1>RoboTwin<span class="plus">-Plus</span></h1>
-    <p class="tagline">Robustness testing for Vision-Language-Action policies via structured
-      perturbations — built on <a href="https://github.com/TianxingChen/RoboTwin">RoboTwin 2.0</a>.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/markli1hoshipu/Robotwin-plus">View on GitHub</a>
-      <a class="btn ghost" href="#quickstart">Quick Start</a>
-      <a class="btn ghost" href="#taxonomy">Perturbations</a>
-    </div>
-    <div class="pills">
-      <span class="pill">7 dimensions</span>
-      <span class="pill">50 tasks</span>
-      <span class="pill">config-driven</span>
-      <span class="pill">backward compatible</span>
-      <span class="pill">MIT licensed</span>
-    </div>
+<header>
+  <div class="col">
+    <p class="kicker reveal">Bimanual Manipulation · VLA Robustness Benchmark</p>
+    <h1 class="reveal d1">RoboTwin<span class="plus">-Plus</span></h1>
+    <p class="subtitle reveal d1">Robustness Testing for Vision-Language-Action Policies via Structured Perturbations</p>
+
+    <p class="authors reveal d2">
+      <span class="corr">Zhanguang Zhang</span><sup>1</sup>, Zhiyuan Li<sup>1,2</sup>, Behnam Rahmati<sup>1</sup>,
+      Rui Heng Yang<sup>1</sup>, Yintao Ma<sup>1</sup>, Amir Rasouli<sup>1</sup>,
+      Sajjad Pakdamansavoji<sup>1</sup>, Yangzheng Wu<sup>1</sup>, Lingfeng Zhang<sup>1</sup>,
+      Tongtong Cao<sup>1</sup>, Feng Wen<sup>1</sup>, Xinyu Wang<sup>1</sup>,
+      Xingyue Quan<sup>1</sup>, <span class="corr">Yingxue Zhang</span><sup>1</sup>
+    </p>
+    <p class="affil reveal d2"><sup>1</sup> Huawei Technologies &nbsp;&nbsp; <sup>2</sup> University of Toronto</p>
+    <p class="contact reveal d2">Corresponding authors: <code>zhanguang.zhang@huawei.com</code>,
+      <code>yingxue.zhang@huawei.com</code> · Zhiyuan Li contributed during an internship at Huawei Canada.</p>
+
+    <nav class="links reveal d3" aria-label="Project links">
+      <a class="lnk" href="https://github.com/markli1hoshipu/Robotwin-plus">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Code
+      </a>
+      <a class="lnk alt" href="https://arxiv.org/abs/2506.18088">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 1.5h5L13 5v9.5H4z"/><path d="M9 1.5V5h4"/></svg>
+        RoboTwin 2.0 Paper
+      </a>
+      <a class="lnk alt" href="https://arxiv.org/abs/2510.13626">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 1.5h5L13 5v9.5H4z"/><path d="M9 1.5V5h4"/></svg>
+        LIBERO-Plus Paper
+      </a>
+    </nav>
   </div>
 </header>
 
-<section id="taxonomy">
-  <div class="wrap">
-    <h2>Seven perturbation dimensions</h2>
-    <p class="sub">Each dimension maps to a LIBERO-Plus category and is applied per-episode
-      through a single YAML config. Features only activate when their keys are present, so
-      upstream RoboTwin configs keep working unchanged.</p>
-    <div class="grid">
-      <div class="card"><div class="dim">Objects</div><h3>Layout &amp; pose</h3>
-        <p>Confounding distractor objects and target-object pose perturbation.</p>
-        <div class="codes"><span>O1</span><span>O2</span></div></div>
-      <div class="card"><div class="dim">Background</div><h3>Scene textures</h3>
-        <p>Scene-theme textures plus surface / tabletop material randomization.</p>
-        <div class="codes"><span>B1</span><span>B2</span></div></div>
-      <div class="card"><div class="dim">Lighting</div><h3>Light conditions</h3>
-        <p>Diffuse color, direction, specular highlights, and shadow manipulation.</p>
-        <div class="codes"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div></div>
-      <div class="card"><div class="dim">Camera</div><h3>Viewpoints</h3>
-        <p>Distance, spherical position, and orientation perturbation.</p>
-        <div class="codes"><span>C1</span><span>C2</span><span>C3</span></div></div>
-      <div class="card"><div class="dim">Robot</div><h3>Initial state</h3>
-        <p>Gaussian noise on initial joint angles plus gripper extremes.</p>
-        <div class="codes"><span>std 0.1 rad</span></div></div>
-      <div class="card"><div class="dim">Language</div><h3>Instructions</h3>
-        <p>Distraction, common-sense rewording, and reasoning-chain rephrasing.</p>
-        <div class="codes"><span>R1</span><span>R2</span><span>R3</span></div></div>
-      <div class="card"><div class="dim">Sensor</div><h3>Noise</h3>
-        <p>Motion blur, gaussian blur, zoom blur, fog, and glass blur.</p>
-        <div class="codes"><span>N1</span><span>N2</span><span>N3</span><span>N4</span><span>N5</span></div></div>
-      <div class="card" style="border-style:dashed"><div class="dim">Baseline</div><h3>Clean</h3>
-        <p>Deterministic layout, default lighting/camera, original instructions.</p>
-        <div class="codes"><span>demo_clean</span></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="quickstart">
-  <div class="wrap">
-    <h2>Quick start</h2>
-    <p class="sub">All data collection uses one command pattern. A GPU is required.</p>
-<pre><span class="c"># bash collect_data.sh &lt;task_name&gt; &lt;config_name&gt; &lt;gpu_id&gt;</span>
-
-<span class="c"># Clean baseline (no perturbation)</span>
-bash collect_data.sh beat_block_hammer demo_clean 0
-
-<span class="c"># A perturbation branch, e.g. lighting</span>
-bash collect_data.sh beat_block_hammer demo_light 0</pre>
-    <p class="note">Install with <code>bash script/_install.sh</code> then
-      <code>bash script/_download_assets.sh</code>. See the
-      <a href="https://github.com/markli1hoshipu/Robotwin-plus#installation">README</a> for details.</p>
+<section class="abstract">
+  <div class="col">
+    <p class="eyebrow">Abstract</p>
+    <p>Robustness is a prerequisite for deploying Vision-Language-Action (VLA) policies beyond
+      the conditions they were trained in. RoboTwin-Plus extends the
+      <a href="https://github.com/TianxingChen/RoboTwin">RoboTwin&nbsp;2.0</a> bimanual
+      manipulation platform with a structured perturbation suite that follows the
+      <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus</a> taxonomy — seven perturbation
+      dimensions spanning twenty-one sub-dimensions across object layout, background texture,
+      lighting, camera viewpoint, robot initial state, language instruction, and sensor noise.
+      Every perturbation is applied per episode through a single declarative configuration and
+      is fully backward compatible: features activate only when their keys are present, so
+      existing RoboTwin configs behave identically. The result is a reproducible protocol for
+      measuring how a policy's success degrades — one clean baseline plus seven perturbation
+      branches over all fifty tasks.</p>
   </div>
 </section>
 
 <section>
-  <div class="wrap">
-    <h2>The eight evaluation configs</h2>
-    <p class="sub">One clean baseline plus seven perturbation branches — a full
-      LIBERO-Plus-style robustness sweep.</p>
-    <div class="table-scroll">
+  <div class="col">
+    <p class="eyebrow">Perturbation Suite</p>
+    <h2>Seven dimensions, twenty-one sub-dimensions</h2>
+    <figure>
+      <div class="fig-grid">
+        <div class="dim"><span class="code">Objects</span><h3>Layout &amp; pose</h3>
+          <p>Confounding distractor objects and target-object pose perturbation.</p>
+          <div class="subs"><span>O1</span><span>O2</span></div></div>
+        <div class="dim"><span class="code">Background</span><h3>Scene textures</h3>
+          <p>Scene-theme textures plus surface and tabletop material randomization.</p>
+          <div class="subs"><span>B1</span><span>B2</span></div></div>
+        <div class="dim"><span class="code">Lighting</span><h3>Light conditions</h3>
+          <p>Diffuse color, direction, specular highlights, and shadow manipulation.</p>
+          <div class="subs"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div></div>
+        <div class="dim"><span class="code">Camera</span><h3>Viewpoints</h3>
+          <p>Distance, spherical position, and orientation perturbation.</p>
+          <div class="subs"><span>C1</span><span>C2</span><span>C3</span></div></div>
+        <div class="dim"><span class="code">Robot</span><h3>Initial state</h3>
+          <p>Gaussian noise on initial joint angles plus gripper extremes.</p>
+          <div class="subs"><span>σ = 0.1 rad</span></div></div>
+        <div class="dim"><span class="code">Language</span><h3>Instructions</h3>
+          <p>Distraction, common-sense rewording, and reasoning-chain rephrasing.</p>
+          <div class="subs"><span>R1</span><span>R2</span><span>R3</span></div></div>
+        <div class="dim"><span class="code">Sensor</span><h3>Noise</h3>
+          <p>Motion blur, gaussian blur, zoom blur, fog, and glass blur.</p>
+          <div class="subs"><span>N1</span><span>N2</span><span>N3</span><span>N4</span><span>N5</span></div></div>
+        <div class="dim clean"><span class="code">Baseline</span><h3>Clean</h3>
+          <p>Deterministic layout, default lighting and camera, original instructions.</p>
+          <div class="subs"><span>demo_clean</span></div></div>
+      </div>
+      <figcaption><b>Figure 1.</b> The seven perturbation dimensions applied per episode, with the
+        clean baseline for reference. Coverage is <b>21 / 21</b> LIBERO-Plus sub-dimensions.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Usage</p>
+    <h2>Quick start</h2>
+    <p class="lead">Data collection uses a single command pattern. A GPU is required.</p>
+<pre><span class="c"># bash collect_data.sh &lt;task_name&gt; &lt;config_name&gt; &lt;gpu_id&gt;</span>
+
+<span class="c"># Clean baseline — no perturbation</span>
+bash collect_data.sh beat_block_hammer demo_clean 0
+
+<span class="c"># A perturbation branch, e.g. lighting (L1–L4)</span>
+bash collect_data.sh beat_block_hammer demo_light 0</pre>
+    <p class="hint">Install with <code>bash script/_install.sh</code>, then download assets with
+      <code>bash script/_download_assets.sh</code>. See the
+      <a href="https://github.com/markli1hoshipu/Robotwin-plus#installation">README</a> for the full setup.</p>
+  </div>
+</section>
+
+<section>
+  <div class="col">
+    <p class="eyebrow">Evaluation Protocol</p>
+    <h2>One baseline, seven branches</h2>
+    <div class="tbl-wrap">
       <table>
+        <caption>Table 1. The eight configs for a full LIBERO-Plus-style robustness sweep, over any of the 50 tasks.</caption>
         <thead><tr><th>#</th><th>Branch</th><th>Config</th><th>Tests</th></tr></thead>
         <tbody>
-          <tr><td>0</td><td>Clean baseline</td><td><code>demo_clean</code></td><td>No perturbation</td></tr>
-          <tr><td>1</td><td>Sensor noise</td><td><code>demo_vision_noise</code></td><td>N1–N5 blur / fog</td></tr>
-          <tr><td>2</td><td>Lighting</td><td><code>demo_light</code></td><td>L1–L4 light &amp; shadow</td></tr>
-          <tr><td>3</td><td>Camera</td><td><code>demo_camera</code></td><td>C1–C3 viewpoint</td></tr>
-          <tr><td>4</td><td>Robot state</td><td><code>demo_robot_state</code></td><td>Initial joint noise</td></tr>
-          <tr><td>5</td><td>Background</td><td><code>demo_background_plus</code></td><td>B1+/B2 color &amp; material</td></tr>
-          <tr><td>6</td><td>Objects</td><td><code>demo_objects_plus</code></td><td>O1+/O2 distractors &amp; pose</td></tr>
-          <tr><td>7</td><td>Language</td><td><code>demo_language_plus</code></td><td>R1+R2+R3 instructions</td></tr>
+          <tr><td><span class="num">0</span></td><td>Clean baseline</td><td><code>demo_clean</code></td><td>No perturbation</td></tr>
+          <tr><td><span class="num">1</span></td><td>Sensor noise</td><td><code>demo_vision_noise</code></td><td>N1–N5 blur / fog</td></tr>
+          <tr><td><span class="num">2</span></td><td>Lighting</td><td><code>demo_light</code></td><td>L1–L4 light &amp; shadow</td></tr>
+          <tr><td><span class="num">3</span></td><td>Camera</td><td><code>demo_camera</code></td><td>C1–C3 viewpoint</td></tr>
+          <tr><td><span class="num">4</span></td><td>Robot state</td><td><code>demo_robot_state</code></td><td>Initial joint noise</td></tr>
+          <tr><td><span class="num">5</span></td><td>Background</td><td><code>demo_background_plus</code></td><td>B1+/B2 color &amp; material</td></tr>
+          <tr><td><span class="num">6</span></td><td>Objects</td><td><code>demo_objects_plus</code></td><td>O1+/O2 distractors &amp; pose</td></tr>
+          <tr><td><span class="num">7</span></td><td>Language</td><td><code>demo_language_plus</code></td><td>R1+R2+R3 instructions</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
+<section>
+  <div class="col">
+    <p class="eyebrow">Citation</p>
+    <h2>Citing RoboTwin-Plus</h2>
+    <p class="lead">If you use RoboTwin-Plus, please cite this repository along with RoboTwin&nbsp;2.0.</p>
+    <div class="bib">@software{robotwin_plus,
+  title  = {RoboTwin-Plus: Robustness Testing for VLA Policies
+            via Structured Perturbations},
+  author = {Zhang, Zhanguang and Li, Zhiyuan and Rahmati, Behnam and
+            Yang, Rui Heng and Ma, Yintao and Rasouli, Amir and
+            Pakdamansavoji, Sajjad and Wu, Yangzheng and Zhang, Lingfeng and
+            Cao, Tongtong and Wen, Feng and Wang, Xinyu and
+            Quan, Xingyue and Zhang, Yingxue},
+  year   = {2025},
+  url    = {https://github.com/markli1hoshipu/Robotwin-plus}
+}</div>
+  </div>
+</section>
+
 <footer>
-  <div class="wrap">
-    <p style="margin-bottom:6px"><strong>Authors.</strong>
-      Zhanguang Zhang<sup>1</sup>, Zhiyuan Li<sup>1,2</sup>, Behnam Rahmati<sup>1</sup>,
-      Rui Heng Yang<sup>1</sup>, Yintao Ma<sup>1</sup>, Amir Rasouli<sup>1</sup>,
-      Sajjad Pakdamansavoji<sup>1</sup>, Yangzheng Wu<sup>1</sup>, Lingfeng Zhang<sup>1</sup>,
-      Tongtong Cao<sup>1</sup>, Feng Wen<sup>1</sup>, Xinyu Wang<sup>1</sup>,
-      Xingyue Quan<sup>1</sup>, and Yingxue Zhang<sup>1</sup>.</p>
-    <p style="margin-bottom:18px"><sup>1</sup> Huawei Technologies
-      &nbsp;&nbsp; <sup>2</sup> University of Toronto</p>
+  <div class="col">
     <p><strong>RoboTwin-Plus</strong> is a derivative work of
-      <a href="https://github.com/TianxingChen/RoboTwin">RoboTwin 2.0</a>, released under the
-      MIT License. Perturbation taxonomy follows
-      <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus</a>.
-      See the <a href="https://github.com/markli1hoshipu/Robotwin-plus/blob/main/NOTICE">NOTICE</a>
-      file for full attribution.</p>
-    <p>
+      <a href="https://github.com/TianxingChen/RoboTwin">RoboTwin&nbsp;2.0</a>, released under the
+      MIT License. The perturbation taxonomy follows
+      <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus</a>. See the
+      <a href="https://github.com/markli1hoshipu/Robotwin-plus/blob/main/NOTICE">NOTICE</a>
+      file for full attribution and lineage.</p>
+    <p class="meta">
       <a href="https://github.com/markli1hoshipu/Robotwin-plus">GitHub</a> ·
-      <a href="https://github.com/markli1hoshipu/Robotwin-plus#installation">Docs</a> ·
+      <a href="https://github.com/markli1hoshipu/Robotwin-plus#installation">Documentation</a> ·
       <a href="https://arxiv.org/abs/2506.18088">RoboTwin paper</a> ·
       <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus paper</a>
+      &nbsp;·&nbsp; © 2025 The RoboTwin-Plus authors, Huawei Technologies
     </p>
   </div>
 </footer>
