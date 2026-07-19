@@ -7,7 +7,50 @@ abstract: >-
   lighting, camera, robot state, language, sensor noise) for systematically
   evaluating the robustness of Vision-Language-Action policies.
 authors:
-  - name: "RoboTwin-Plus contributors"
+  - given-names: Zhanguang
+    family-names: Zhang
+    affiliation: "Huawei Technologies"
+    email: zhanguang.zhang@huawei.com
+  - given-names: Zhiyuan
+    family-names: Li
+    affiliation: "Huawei Technologies; University of Toronto"
+  - given-names: Behnam
+    family-names: Rahmati
+    affiliation: "Huawei Technologies"
+  - given-names: "Rui Heng"
+    family-names: Yang
+    affiliation: "Huawei Technologies"
+  - given-names: Yintao
+    family-names: Ma
+    affiliation: "Huawei Technologies"
+  - given-names: Amir
+    family-names: Rasouli
+    affiliation: "Huawei Technologies"
+  - given-names: Sajjad
+    family-names: Pakdamansavoji
+    affiliation: "Huawei Technologies"
+  - given-names: Yangzheng
+    family-names: Wu
+    affiliation: "Huawei Technologies"
+  - given-names: Lingfeng
+    family-names: Zhang
+    affiliation: "Huawei Technologies"
+  - given-names: Tongtong
+    family-names: Cao
+    affiliation: "Huawei Technologies"
+  - given-names: Feng
+    family-names: Wen
+    affiliation: "Huawei Technologies"
+  - given-names: Xinyu
+    family-names: Wang
+    affiliation: "Huawei Technologies"
+  - given-names: Xingyue
+    family-names: Quan
+    affiliation: "Huawei Technologies"
+  - given-names: Yingxue
+    family-names: Zhang
+    affiliation: "Huawei Technologies"
+    email: yingxue.zhang@huawei.com
 type: software
 license: MIT
 url: "https://github.com/markli1hoshipu/Robotwin-plus"

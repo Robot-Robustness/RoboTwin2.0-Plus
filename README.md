@@ -118,7 +118,7 @@ bash collect_data.sh beat_block_hammer demo_language_r2 0
 bash collect_data.sh beat_block_hammer demo_language_r3 0
 ```
 
-### Original Behnam Configs (single-dimension baselines)
+### Original Core Configs (single-dimension baselines)
 
 These test individual dimensions without Plus enhancements:
 
@@ -189,7 +189,7 @@ Goes beyond fixed 10 distractors:
 - **O2**: Target object pose perturbation — Gaussian position noise (2cm std, x/y only) + yaw rotation (±15deg)
 
 ### demo_background.yml / demo_objects.yml — Original Baselines
-Behnam's single-dimension baselines (B1 texture swap only, O1 fixed 10 distractors). Useful for comparison against Plus versions.
+Core single-dimension baselines (B1 texture swap only, O1 fixed 10 distractors). Useful for comparison against Plus versions.
 
 ### demo_randomized.yml — Original Full DR
 Upstream RoboTwin domain randomization (texture swap + 10 distractors + random lighting). Does not include Plus features.
@@ -216,13 +216,13 @@ All configs live in `task_config/`.
 |---|------|-------|-------------|---------------------|
 | 6 | `demo_clean.yml` | Upstream | None (clean baseline) | **Yes — baseline** |
 | 7 | `demo_randomized.yml` | Upstream | Original full DR (texture + 10 distractors + light) | No — legacy |
-| 8 | `demo_vision_noise.yml` | Behnam | Sensor Noise N1-N5 | **Yes — Branch 1** |
-| 9 | `demo_light.yml` | Behnam | Lighting L1-L4 | **Yes — Branch 2** |
-| 10 | `demo_camera.yml` | Behnam | Camera C1-C3 | **Yes — Branch 3** |
-| 11 | `demo_robot_state.yml` | Behnam | Robot initial state perturbation | **Yes — Branch 4** |
-| 12 | `demo_language.yml` | Behnam | Language R1 only (distraction) | No — use `demo_language_plus` instead |
-| 13 | `demo_background.yml` | Behnam | Background B1 only (texture swap) | No — use `demo_background_plus` instead |
-| 14 | `demo_objects.yml` | Behnam | Objects O1 only (fixed 10 distractors) | No — use `demo_objects_plus` instead |
+| 8 | `demo_vision_noise.yml` | Core | Sensor Noise N1-N5 | **Yes — Branch 1** |
+| 9 | `demo_light.yml` | Core | Lighting L1-L4 | **Yes — Branch 2** |
+| 10 | `demo_camera.yml` | Core | Camera C1-C3 | **Yes — Branch 3** |
+| 11 | `demo_robot_state.yml` | Core | Robot initial state perturbation | **Yes — Branch 4** |
+| 12 | `demo_language.yml` | Core | Language R1 only (distraction) | No — use `demo_language_plus` instead |
+| 13 | `demo_background.yml` | Core | Background B1 only (texture swap) | No — use `demo_background_plus` instead |
+| 14 | `demo_objects.yml` | Core | Objects O1 only (fixed 10 distractors) | No — use `demo_objects_plus` instead |
 | 15 | **`demo_background_plus.yml`** | **Plus** | B1+ color tint + B2 surface material + floor | **Yes — Branch 5** |
 | 16 | **`demo_objects_plus.yml`** | **Plus** | O1+ variable distractors (3-15) + O2 pose noise | **Yes — Branch 6** |
 | 17 | **`demo_language_plus.yml`** | **Plus** | R1 + R2 + R3 combined | **Yes — Branch 7** |
@@ -285,7 +285,7 @@ Episode noise: gaussian @ L2
 This repo has 3 layered commits:
 
 1. **Upstream RoboTwin v2.0** — original codebase
-2. **Behnam's perturbation extensions** — N1-N5, L1-L4, C1-C3, R1, robot init state
+2. **Core perturbation extensions** — N1-N5, L1-L4, C1-C3, R1, robot init state
 3. **RoboTwin-Plus** — B1+/B2 background, O1+/O2 objects, R2/R3 language
 
 All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
@@ -299,10 +299,10 @@ All changes are backward-compatible — existing configs work identically becaus
 ### Key modified files (vs upstream)
 | File | What changed |
 |------|-------------|
-| `envs/_base_task.py` | Sensor noise, lighting, camera, robot init (Behnam) + B1+/B2, O1+/O2 config parsing and dispatch (Plus) |
-| `envs/camera/camera.py` | Camera ablation C1/C2/C3 support (Behnam) |
+| `envs/_base_task.py` | Sensor noise, lighting, camera, robot init (Core) + B1+/B2, O1+/O2 config parsing and dispatch (Plus) |
+| `envs/camera/camera.py` | Camera ablation C1/C2/C3 support (Core) |
 | `envs/utils/create_actor.py` | `create_table()` accepts `surface_params` for B2 material randomization (Plus) |
-| `description/utils/generate_episode_instructions.py` | R1 distraction (Behnam) + R2/R3 dispatch (Plus) |
+| `description/utils/generate_episode_instructions.py` | R1 distraction (Core) + R2/R3 dispatch (Plus) |
 
 ### Key new files
 | File | Purpose |
@@ -323,6 +323,21 @@ All changes are backward-compatible — existing configs work identically becaus
 
 ---
 
+## Authors
+
+RoboTwin-Plus is developed by:
+
+**Zhanguang Zhang**¹\*, Zhiyuan Li¹ ², Behnam Rahmati¹, Rui Heng Yang¹, Yintao Ma¹,
+Amir Rasouli¹, Sajjad Pakdamansavoji¹, Yangzheng Wu¹, Lingfeng Zhang¹, Tongtong Cao¹,
+Feng Wen¹, Xinyu Wang¹, Xingyue Quan¹, and **Yingxue Zhang**¹\*
+
+¹ Huawei Technologies  ·  ² University of Toronto
+
+\* Corresponding authors: `zhanguang.zhang@huawei.com`, `yingxue.zhang@huawei.com`
+Zhiyuan Li contributed during an internship at Huawei Canada.
+
+---
+
 ## Citation
 
 If you use RoboTwin-Plus, please cite this repository (see [`CITATION.cff`](CITATION.cff))
@@ -331,7 +346,10 @@ along with the upstream works it builds on:
 ```bibtex
 @software{robotwin_plus,
   title  = {RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations},
-  author = {{RoboTwin-Plus contributors}},
+  author = {Zhang, Zhanguang and Li, Zhiyuan and Rahmati, Behnam and Yang, Rui Heng and
+            Ma, Yintao and Rasouli, Amir and Pakdamansavoji, Sajjad and Wu, Yangzheng and
+            Zhang, Lingfeng and Cao, Tongtong and Wen, Feng and Wang, Xinyu and
+            Quan, Xingyue and Zhang, Yingxue},
   year   = {2025},
   url    = {https://github.com/markli1hoshipu/Robotwin-plus}
 }

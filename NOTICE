@@ -29,9 +29,10 @@ This project builds on the following upstream work, layered in three stages:
    robot initial-state perturbation, and language distraction (R1).
 
 3. RoboTwin-Plus additions
-   Copyright (c) 2025 RoboTwin-Plus contributors.
+   Copyright (c) 2025 The RoboTwin-Plus authors (Huawei Technologies).
    Background B1+/B2, objects O1+/O2, and language R2/R3 perturbations, plus
    the config set and documentation in this repository.
+   See CITATION.cff or the README for the full author list.
 
 -------------------------------------------------------------------------------
 Bundled third-party components

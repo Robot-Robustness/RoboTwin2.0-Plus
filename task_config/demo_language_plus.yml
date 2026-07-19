@@ -16,7 +16,7 @@ language_num: 100
 
 # Language perturbation mode
 # Options: seen, unseen, r1, r2, r3, r1r2r3, language_plus
-# - r1: distraction only (original Behnam behavior)
+# - r1: distraction only (original R1-only behavior)
 # - r2: common sense rewording only
 # - r3: reasoning chain / goal state only
 # - r1r2r3 / language_plus: all three types generated together
