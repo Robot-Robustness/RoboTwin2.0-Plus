@@ -2,6 +2,7 @@
 
 > Extending [RoboTwin 2.0](https://github.com/TianxingChen/RoboTwin) with [LIBERO-Plus](https://arxiv.org/abs/2510.13626)-style perturbation categories for evaluating VLA robustness.
 
+[![Paper](https://img.shields.io/badge/arXiv-2603.22078-b31b1b.svg)](https://arxiv.org/abs/2603.22078)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Based on RoboTwin 2.0](https://img.shields.io/badge/based%20on-RoboTwin%202.0-informational)](https://github.com/TianxingChen/RoboTwin)
 [![Perturbation coverage](https://img.shields.io/badge/LIBERO--Plus%20coverage-21%2F21-brightgreen)](https://arxiv.org/abs/2510.13626)
@@ -316,6 +317,7 @@ All changes are backward-compatible — existing configs work identically becaus
 
 ## References
 
+- **RoboTwin-Plus paper**: *Do World Action Models Generalize Better than VLAs? A Robustness Study* — https://arxiv.org/abs/2603.22078
 - LIBERO-Plus paper: https://arxiv.org/abs/2510.13626
 - LIBERO-Plus GitHub: https://github.com/sylvestf/LIBERO-plus
 - RoboTwin 2.0: https://robotwin-platform.github.io/
@@ -342,18 +344,18 @@ Zhiyuan Li contributed during an internship at Huawei Canada.
 
 ## Citation
 
-If you use RoboTwin-Plus, please cite this repository (see [`CITATION.cff`](CITATION.cff))
+If you use RoboTwin-Plus, please cite our paper (see [`CITATION.cff`](CITATION.cff))
 along with the upstream works it builds on:
 
 ```bibtex
-@software{robotwin_plus,
-  title  = {RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations},
-  author = {Zhang, Zhanguang and Li, Zhiyuan and Rahmati, Behnam and Yang, Rui Heng and
-            Ma, Yintao and Rasouli, Amir and Pakdamansavoji, Sajjad and Wu, Yangzheng and
-            Zhang, Lingfeng and Cao, Tongtong and Wen, Feng and Wang, Xinyu and
-            Quan, Xingyue and Zhang, Yingxue},
-  year   = {2025},
-  url    = {https://github.com/markli1hoshipu/Robotwin-plus}
+@article{zhang2026worldaction,
+  title   = {Do World Action Models Generalize Better than VLAs? A Robustness Study},
+  author  = {Zhang, Zhanguang and Li, Zhiyuan and Rahmati, Behnam and Yang, Rui Heng and
+             Ma, Yintao and Rasouli, Amir and Pakdamansavoji, Sajjad and Wu, Yangzheng and
+             Zhang, Lingfeng and Cao, Tongtong and Wen, Feng and Wang, Xinyu and
+             Quan, Xingyue and Zhang, Yingxue},
+  journal = {arXiv preprint arXiv:2603.22078},
+  year    = {2026}
 }
 
 @article{robotwin2,

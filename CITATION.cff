@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use RoboTwin-Plus in your research, please cite this repository as well as the upstream RoboTwin 2.0 and LIBERO-Plus works listed below."
+message: "If you use RoboTwin-Plus in your research, please cite our paper (preferred-citation below) as well as the upstream RoboTwin 2.0 and LIBERO-Plus works."
 title: "RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations"
 abstract: >-
   RoboTwin-Plus extends the RoboTwin 2.0 bimanual manipulation platform with
@@ -62,6 +62,30 @@ keywords:
   - robustness
   - benchmark
   - domain-randomization
+preferred-citation:
+  type: article
+  title: "Do World Action Models Generalize Better than VLAs? A Robustness Study"
+  year: 2026
+  url: "https://arxiv.org/abs/2603.22078"
+  identifiers:
+    - type: other
+      value: "arXiv:2603.22078"
+      description: "arXiv preprint"
+  authors:
+    - {given-names: Zhanguang, family-names: Zhang}
+    - {given-names: Zhiyuan, family-names: Li}
+    - {given-names: Behnam, family-names: Rahmati}
+    - {given-names: "Rui Heng", family-names: Yang}
+    - {given-names: Yintao, family-names: Ma}
+    - {given-names: Amir, family-names: Rasouli}
+    - {given-names: Sajjad, family-names: Pakdamansavoji}
+    - {given-names: Yangzheng, family-names: Wu}
+    - {given-names: Lingfeng, family-names: Zhang}
+    - {given-names: Tongtong, family-names: Cao}
+    - {given-names: Feng, family-names: Wen}
+    - {given-names: Xinyu, family-names: Wang}
+    - {given-names: Xingyue, family-names: Quan}
+    - {given-names: Yingxue, family-names: Zhang}
 references:
   - type: article
     title: "RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation"
