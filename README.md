@@ -3,6 +3,7 @@
 > The official benchmark from **[Do World Action Models Generalize Better than VLAs? A Robustness Study](https://arxiv.org/abs/2603.22078)** — a structured perturbation suite for evaluating the robustness of Vision-Language-Action (VLA) and World Action Model (WAM) policies.
 
 [![Paper](https://img.shields.io/badge/arXiv-2603.22078-b31b1b.svg)](https://arxiv.org/abs/2603.22078)
+[![Project Page](https://img.shields.io/badge/Project-Page-1f8ceb.svg)](https://robot-robustness.github.io/RoboTwin2.0-Plus/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2021%20sub--dims-brightgreen)](#perturbation-taxonomy)
 
@@ -320,6 +321,7 @@ All changes are backward-compatible — existing configs work identically becaus
 
 ## References
 
+- **Project page**: https://robot-robustness.github.io/RoboTwin2.0-Plus/
 - **RoboTwin 2.0-Plus paper**: *Do World Action Models Generalize Better than VLAs? A Robustness Study* — https://arxiv.org/abs/2603.22078
 - LIBERO-Plus paper: https://arxiv.org/abs/2510.13626
 - LIBERO-Plus GitHub: https://github.com/sylvestf/LIBERO-plus
