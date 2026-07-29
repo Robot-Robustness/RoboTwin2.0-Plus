@@ -199,7 +199,8 @@
       than VLAs? A Robustness Study</i></a> — a structured perturbation suite of seven
       perturbation dimensions spanning twenty-one sub-dimensions — a clean baseline plus twenty perturbation sub-dimensions — across object layout,
       background texture, lighting, camera viewpoint, robot initial state, language instruction,
-      and sensor noise. Built on the RoboTwin 2.0 bimanual manipulation platform, every
+      and sensor noise. Built on the RoboTwin 2.0 bimanual manipulation platform (two-arm
+      Aloha-Agilex embodiment), every
       perturbation is applied per episode through a single declarative configuration and is
       fully backward compatible: features activate only when their keys are present, so existing
       configs behave identically. The result is a reproducible protocol for measuring how a
@@ -235,7 +236,7 @@
         <div class="pcard">
           <img class="thumb" src="img/pert/camera.png" alt="Camera-viewpoint perturbed view" loading="lazy">
           <div class="body"><span class="code">Camera</span><h3>Viewpoints</h3>
-            <p>Head-camera viewpoint pose: distance, spherical position, orientation.</p>
+            <p>Head-camera viewpoint: distance (C1) and orientation (C3); spherical position (C2) off by default.</p>
             <div class="subs"><span>C1</span><span>C2</span><span>C3</span></div></div>
         </div>
         <div class="pcard">
