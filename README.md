@@ -25,8 +25,8 @@ RoboTwin 2.0-Plus uses the same environment as RoboTwin 2.0.
 
 ```bash
 # 1. Clone
-git clone https://github.com/markli1hoshipu/Robotwin-plus.git
-cd Robotwin-plus
+git clone https://github.com/markli1hoshipu/RoboTwin2.0-Plus.git
+cd RoboTwin2.0-Plus
 
 # 2. Create a Python 3.10 environment (conda recommended)
 conda create -n RoboTwin python=3.10 -y
@@ -142,7 +142,7 @@ bash collect_data.sh beat_block_hammer demo_randomized 0   # Original full DR
 #SBATCH --time=01:00:00
 #SBATCH --partition=compute
 
-cd /path/to/robotwin-plus
+cd /path/to/RoboTwin2.0-Plus
 bash collect_data.sh beat_block_hammer demo_background_plus 0
 ```
 
