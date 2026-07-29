@@ -1,4 +1,4 @@
-# RoboTwin-Plus: Language Perturbation (R1 + R2 + R3)
+# RoboTwin 2.0-Plus: Language Perturbation (R1 + R2 + R3)
 # Generates all three LIBERO-Plus language perturbation types:
 #   R1: Distraction (irrelevant conversational context)
 #   R2: Common Sense Rewording (object names → functional descriptions)

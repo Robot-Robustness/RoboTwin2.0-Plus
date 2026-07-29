@@ -337,7 +337,7 @@ def create_table(
     """Create a table with specified dimensions.
 
     Args:
-        surface_params: RoboTwin-Plus B2 dict with keys:
+        surface_params: RoboTwin 2.0-Plus B2 dict with keys:
             metallic (float), roughness (float), color_tint (tuple of 3 floats)
             If provided, overrides the default material properties on the tabletop.
     """
@@ -371,7 +371,7 @@ def create_table(
         material.metallic = 0.1
         material.roughness = 0.3
 
-        # RoboTwin-Plus B2: override surface material properties
+        # RoboTwin 2.0-Plus B2: override surface material properties
         if surface_params is not None:
             tint = surface_params.get("color_tint", (1, 1, 1))
             material.base_color = [tint[0], tint[1], tint[2], 1]
@@ -381,7 +381,7 @@ def create_table(
         builder.add_box_visual(pose=tabletop_pose, half_size=tabletop_half_size, material=material)
 
     elif surface_params is not None:
-        # RoboTwin-Plus B2: no texture, but randomize material properties
+        # RoboTwin 2.0-Plus B2: no texture, but randomize material properties
         material = sapien.render.RenderMaterial()
         tint = surface_params.get("color_tint", (1, 1, 1))
         material.base_color = [tint[0], tint[1], tint[2], 1]

@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-message: "If you use RoboTwin-Plus in your research, please cite our paper (preferred-citation below) as well as the upstream RoboTwin 2.0 and LIBERO-Plus works."
-title: "RoboTwin-Plus: Robustness Testing for VLA Policies via Structured Perturbations"
+message: "If you use RoboTwin 2.0-Plus in your research, please cite our paper (preferred-citation below) as well as the upstream RoboTwin 2.0 and LIBERO-Plus works."
+title: "RoboTwin 2.0-Plus: Robustness Testing for VLA Policies via Structured Perturbations"
 abstract: >-
-  RoboTwin-Plus extends the RoboTwin 2.0 bimanual manipulation platform with
+  RoboTwin 2.0-Plus extends the RoboTwin 2.0 bimanual manipulation platform with
   LIBERO-Plus-style structured perturbation categories (objects, background,
   lighting, camera, robot state, language, sensor noise) for systematically
   evaluating the robustness of Vision-Language-Action policies.

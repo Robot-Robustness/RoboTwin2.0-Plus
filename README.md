@@ -1,19 +1,19 @@
-# RoboTwin-Plus: Robustness Testing via Structured Perturbations
+# RoboTwin 2.0-Plus: Robustness Testing via Structured Perturbations
 
 > The official benchmark from **[Do World Action Models Generalize Better than VLAs? A Robustness Study](https://arxiv.org/abs/2603.22078)** — a structured perturbation suite for evaluating the robustness of Vision-Language-Action (VLA) and World Action Model (WAM) policies.
 
 [![Paper](https://img.shields.io/badge/arXiv-2603.22078-b31b1b.svg)](https://arxiv.org/abs/2603.22078)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2021%20sub--dims-brightgreen)](#libero-plus-reference-taxonomy)
+[![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2020%20sub--dims-brightgreen)](#perturbation-taxonomy)
 
-RoboTwin-Plus provides **7 structured perturbation dimensions (21 sub-dimensions)** — objects,
+RoboTwin 2.0-Plus provides **7 structured perturbation dimensions (20 sub-dimensions)** — objects,
 background, lighting, camera, robot state, language, and sensor noise — applied per episode
 through declarative configs to measure how VLA/WAM policies degrade under distribution shift.
-It is built on the RoboTwin 2.0 platform and remains backward compatible with it (see
-[Repository Structure](#repository-structure) for the lineage).
+It is built on the RoboTwin 2.0 platform (two-arm Aloha-Agilex embodiment) and remains backward
+compatible with it (see [Repository Structure](#repository-structure) for the lineage).
 
 **Contents:** [Installation](#installation) · [Quick Start](#quick-start) ·
-[Perturbation Taxonomy](#libero-plus-reference-taxonomy) · [Configs](#all-19-yaml-config-files) ·
+[Perturbation Taxonomy](#perturbation-taxonomy) · [Configs](#all-19-yaml-config-files) ·
 [Repository Structure](#repository-structure) · [Contributing](CONTRIBUTING.md) ·
 [Citing](#citation)
 
@@ -21,7 +21,7 @@ It is built on the RoboTwin 2.0 platform and remains backward compatible with it
 
 ## Installation
 
-RoboTwin-Plus uses the same environment as RoboTwin 2.0.
+RoboTwin 2.0-Plus uses the same environment as RoboTwin 2.0.
 
 ```bash
 # 1. Clone
@@ -49,14 +49,13 @@ A GPU is required for data collection and evaluation.
 > `description/` need extra dependencies and API keys (set via environment variables,
 > e.g. `AZURE_API_KEY`). These are not required just to collect perturbed data.
 
-The full upstream RoboTwin README is preserved at
-[`README_UPSTREAM.md`](README_UPSTREAM.md).
-
 ---
 
-## LIBERO-Plus Reference Taxonomy
+## Perturbation Taxonomy
 
-LIBERO-Plus defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 difficulty levels:
+RoboTwin 2.0-Plus implements the same perturbation taxonomy as its sister benchmark
+**[LIBERO-Plus](https://github.com/sylvestf/LIBERO-plus)** — both are introduced in the same
+paper. The taxonomy spans **7 perturbation dimensions across 20 sub-dimensions**:
 
 | Dimension | Sub-dims | Codes | Description |
 |-----------|----------|-------|-------------|
@@ -68,7 +67,8 @@ LIBERO-Plus defines **7 perturbation dimensions, 21 sub-dimensions**, and 5 diff
 | **Language Instructions** | 3 | R1-R3 | R1: distraction; R2: common sense rewording; R3: reasoning chain |
 | **Sensor Noise** | 5 | N1-N5 | N1: motion blur; N2: gaussian blur; N3: zoom blur; N4: fog; N5: glass blur |
 
-**Coverage: 21/21 LIBERO-Plus sub-dimensions fully implemented.**
+**Coverage: all 20 sub-dimensions implemented on the RoboTwin platform.** C2 (camera spherical
+position) is disabled by default for simulation stability, leaving 19 active out of the box.
 
 ---
 
@@ -98,7 +98,7 @@ Each branch corresponds to one LIBERO-Plus dimension. Run any of them individual
 |---|--------|---------|---------------|
 | 1 | **Sensor Noise** (N1-N5) | `bash collect_data.sh beat_block_hammer demo_vision_noise 0` | Motion / gaussian / zoom blur, fog, glass blur — cycles one noise type per episode |
 | 2 | **Lighting** (L1-L4) | `bash collect_data.sh beat_block_hammer demo_light 0` | Diffuse tint (always), direction + shadows (50%), specular (50%) — random mix per episode |
-| 3 | **Camera** (C1+C2+C3) | `bash collect_data.sh beat_block_hammer demo_camera 0` | Distance + spherical position + orientation (combined; LIBERO-Plus tests each independently) |
+| 3 | **Camera** (C1+C3) | `bash collect_data.sh beat_block_hammer demo_camera 0` | Distance scaling + orientation; spherical position (C2) is disabled by default for stability |
 | 4 | **Robot State** | `bash collect_data.sh beat_block_hammer demo_robot_state 0` | Initial joint angle noise (Gaussian, clipped) + gripper extremes |
 | 5 | **Language** (R1+R2+R3) | `bash collect_data.sh beat_block_hammer demo_language_plus 0` | Distraction + common sense rewording + reasoning chain instructions |
 | 6 | **Background** (B1+/B2) | `bash collect_data.sh beat_block_hammer demo_background_plus 0` | Wall/floor color tint + table surface material randomization |
@@ -159,8 +159,8 @@ Applies one of 5 noise types per episode (cycled): motion blur, gaussian blur, z
 ### demo_light.yml — Lighting (L1-L4)
 Randomly combines lighting perturbations per episode: L1 diffuse color tint (always on), L2 directional shift (linked to L4), L3 specular highlights (50% chance), L4 shadow manipulation (50% chance). Each episode gets a random mix of these modes.
 
-### demo_camera.yml — Camera Viewpoints (C1+C2+C3 combined)
-Applies all three camera perturbations together per episode: C1 scales distance (0.5-1.0x), C2 shifts spherical position (azimuth/elevation up to ±25°), C3 perturbs orientation (yaw/pitch/roll within 1-5°). Note: LIBERO-Plus tests C1, C2, C3 independently; this config applies them combined. To isolate a single sub-dimension, edit `demo_camera.yml` and set the other two to `enabled: false`.
+### demo_camera.yml — Camera Viewpoints (C1 + C3; C2 disabled by default)
+Perturbs the head-camera viewpoint per episode. **C1** scales distance (0.85–1.0×) and **C3** perturbs orientation (yaw/pitch/roll, 0–5°). **C2** (spherical azimuth/elevation, ±10°) is included in the config but ships with `enabled: false` for simulation stability — set `camera.c2.enabled: true` in `demo_camera.yml` to add it. Toggle any sub-dimension's `enabled` flag to isolate it.
 
 ### demo_robot_state.yml — Robot Initial State
 Adds Gaussian noise to initial joint angles (configurable std and clip range) plus random gripper extreme positions.
@@ -219,7 +219,7 @@ All configs live in `task_config/`.
 | 7 | `demo_randomized.yml` | Upstream | Original full DR (texture + 10 distractors + light) | No — legacy |
 | 8 | `demo_vision_noise.yml` | Core | Sensor Noise N1-N5 | **Yes — Branch 1** |
 | 9 | `demo_light.yml` | Core | Lighting L1-L4 | **Yes — Branch 2** |
-| 10 | `demo_camera.yml` | Core | Camera C1-C3 | **Yes — Branch 3** |
+| 10 | `demo_camera.yml` | Core | Camera C1+C3 (C2 off by default) | **Yes — Branch 3** |
 | 11 | `demo_robot_state.yml` | Core | Robot initial state perturbation | **Yes — Branch 4** |
 | 12 | `demo_language.yml` | Core | Language R1 only (distraction) | No — use `demo_language_plus` instead |
 | 13 | `demo_background.yml` | Core | Background B1 only (texture swap) | No — use `demo_background_plus` instead |
@@ -244,7 +244,7 @@ bash collect_data.sh <task> demo_vision_noise 0
 # 2. Lighting (L1-L4)
 bash collect_data.sh <task> demo_light 0
 
-# 3. Camera (C1-C3)
+# 3. Camera (C1+C3; C2 off by default)
 bash collect_data.sh <task> demo_camera 0
 
 # 4. Robot State
@@ -287,13 +287,13 @@ This repo has 3 layered commits:
 
 1. **Upstream RoboTwin v2.0** — original codebase
 2. **Core perturbation extensions** — N1-N5, L1-L4, C1-C3, R1, robot init state
-3. **RoboTwin-Plus** — B1+/B2 background, O1+/O2 objects, R2/R3 language
+3. **RoboTwin 2.0-Plus** — B1+/B2 background, O1+/O2 objects, R2/R3 language
 
 All changes are backward-compatible — existing configs work identically because new features only activate when their YAML keys are present.
 
 > **Note on `policy/`.** The `policy/` directory (ACT, DP, DP3, RDT, pi0, OpenVLA-OFT,
 > TinyVLA, DexVLA, …) is **inherited from RoboTwin 2.0** and vendors third-party VLA
-> baselines, each under its own upstream license. RoboTwin-Plus does not modify these
+> baselines, each under its own upstream license. RoboTwin 2.0-Plus does not modify these
 > backends — they're kept so you can evaluate policies against the perturbed data. See
 > [`NOTICE`](NOTICE) for the full lineage and per-component attribution.
 
@@ -317,7 +317,7 @@ All changes are backward-compatible — existing configs work identically becaus
 
 ## References
 
-- **RoboTwin-Plus paper**: *Do World Action Models Generalize Better than VLAs? A Robustness Study* — https://arxiv.org/abs/2603.22078
+- **RoboTwin 2.0-Plus paper**: *Do World Action Models Generalize Better than VLAs? A Robustness Study* — https://arxiv.org/abs/2603.22078
 - LIBERO-Plus paper: https://arxiv.org/abs/2510.13626
 - LIBERO-Plus GitHub: https://github.com/sylvestf/LIBERO-plus
 - RoboTwin 2.0: https://robotwin-platform.github.io/
@@ -327,7 +327,7 @@ All changes are backward-compatible — existing configs work identically becaus
 
 ## Authors
 
-RoboTwin-Plus is developed by:
+RoboTwin 2.0-Plus is developed by:
 
 **Zhanguang Zhang**<sup>1\*</sup>, Zhiyuan Li<sup>1,2</sup>, Behnam Rahmati<sup>1</sup>,
 Rui Heng Yang<sup>1</sup>, Yintao Ma<sup>1</sup>, Amir Rasouli<sup>1</sup>,
@@ -344,7 +344,7 @@ Zhiyuan Li contributed during an internship at Huawei Canada.
 
 ## Citation
 
-If you use RoboTwin-Plus, please cite our paper (see [`CITATION.cff`](CITATION.cff))
+If you use RoboTwin 2.0-Plus, please cite our paper (see [`CITATION.cff`](CITATION.cff))
 along with the upstream works it builds on:
 
 ```bibtex
@@ -371,7 +371,7 @@ along with the upstream works it builds on:
 
 ## License & Attribution
 
-RoboTwin-Plus is released under the [MIT License](LICENSE). It is a derivative work of
+RoboTwin 2.0-Plus is released under the [MIT License](LICENSE). It is a derivative work of
 RoboTwin 2.0; see [`NOTICE`](NOTICE) for full attribution, the three-layer lineage, and a
 summary of modifications. Bundled baselines under `policy/` retain their own licenses.
 

@@ -1,4 +1,4 @@
-# RoboTwin-Plus: Language Perturbation — R3 Only (Reasoning Chain / Goal State)
+# RoboTwin 2.0-Plus: Language Perturbation — R3 Only (Reasoning Chain / Goal State)
 # Isolates R3: imperative instructions rewritten as outcome/goal descriptions
 # Uses pre-generated variants from task_instruction_plus/*.json
 # Ref: LIBERO-Plus R3 reasoning chain

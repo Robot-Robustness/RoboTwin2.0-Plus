@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RoboTwin-Plus — Robustness Testing for VLA Policies via Structured Perturbations</title>
-<meta name="description" content="RoboTwin-Plus extends RoboTwin 2.0 with LIBERO-Plus-style structured perturbations for evaluating Vision-Language-Action policy robustness.">
+<title>RoboTwin 2.0-Plus — Robustness Testing for VLA Policies via Structured Perturbations</title>
+<meta name="description" content="RoboTwin 2.0-Plus extends RoboTwin 2.0 with LIBERO-Plus-style structured perturbations for evaluating Vision-Language-Action policy robustness.">
 <style>
   :root{
     --paper:#fcfbf8; --ink:#1a1c22; --muted:#61656f; --faint:#8a8e98;
@@ -164,7 +164,7 @@
 <header>
   <div class="col">
     <p class="kicker reveal">Bimanual Manipulation · VLA Robustness Benchmark</p>
-    <h1 class="reveal d1">RoboTwin<span class="plus">-Plus</span></h1>
+    <h1 class="reveal d1">RoboTwin 2.0<span class="plus">-Plus</span></h1>
     <p class="subtitle reveal d1">Robustness Testing for Vision-Language-Action Policies via Structured Perturbations</p>
 
     <p class="authors reveal d2">
@@ -193,11 +193,11 @@
   <div class="col">
     <p class="eyebrow">Abstract</p>
     <p class="abstract-text">Robustness is a prerequisite for deploying Vision-Language-Action (VLA) and World Action
-      Model (WAM) policies beyond the conditions they were trained in. RoboTwin-Plus is the
+      Model (WAM) policies beyond the conditions they were trained in. RoboTwin 2.0-Plus is the
       benchmark introduced in our study
       <a href="https://arxiv.org/abs/2603.22078"><i>Do World Action Models Generalize Better
       than VLAs? A Robustness Study</i></a> — a structured perturbation suite of seven
-      perturbation dimensions spanning twenty-one sub-dimensions across object layout,
+      perturbation dimensions spanning twenty sub-dimensions across object layout,
       background texture, lighting, camera viewpoint, robot initial state, language instruction,
       and sensor noise. Built on the RoboTwin 2.0 bimanual manipulation platform, every
       perturbation is applied per episode through a single declarative configuration and is
@@ -211,7 +211,7 @@
 <section>
   <div class="col">
     <p class="eyebrow">Perturbation Suite</p>
-    <h2>Seven dimensions, twenty-one sub-dimensions</h2>
+    <h2>Seven dimensions, twenty sub-dimensions</h2>
     <figure>
       <div class="pgrid">
         <div class="pcard clean">
@@ -264,8 +264,8 @@
         </div>
       </div>
       <figcaption><b>Figure 1.</b> Example head-camera observations for the clean baseline and each
-        perturbation dimension. Coverage is <b>21 / 21</b> sub-dimensions implemented
-        (20 active by default; C2 disabled to avoid instability).</figcaption>
+        perturbation dimension. Coverage is <b>20 / 20</b> sub-dimensions implemented
+        (19 active by default; C2 disabled for stability).</figcaption>
     </figure>
   </div>
 </section>
@@ -315,10 +315,10 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
 
     <p class="taxsub"><b>Perturbation taxonomy.</b> Each dimension decomposes into sub-dimensions,
       individually configurable via YAML flags for combined or ablation-style evaluation. Table 2
-      lists all 21 sub-dimensions with implementation-level parameters.</p>
+      lists all 20 sub-dimensions with implementation-level parameters.</p>
     <div class="tbl-wrap">
       <table class="tax">
-        <caption>Table 2. RoboTwin-Plus perturbation taxonomy — 21 sub-dimensions across 7 dimensions, with parameter details.</caption>
+        <caption>Table 2. RoboTwin 2.0-Plus perturbation taxonomy — 20 sub-dimensions across 7 dimensions, with parameter details.</caption>
         <thead><tr><th>Dimension</th><th>Code</th><th>Sub-dimension</th><th>Implementation details</th></tr></thead>
         <tbody>
           <tr><td class="dimcell" rowspan="5">Sensor Noise</td><td class="codecell">N1</td><td>Motion blur</td><td class="detail">Gaussian kernel (r ∈ [3, 15], σ ∈ [1, 8]), rotated by a random angle ∈ [−30°, 30°]</td></tr>
@@ -356,8 +356,8 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
 <section>
   <div class="col">
     <p class="eyebrow">Citation</p>
-    <h2>Citing RoboTwin-Plus</h2>
-    <p class="lead">If you use RoboTwin-Plus, please cite our paper along with RoboTwin&nbsp;2.0.</p>
+    <h2>Citing RoboTwin 2.0-Plus</h2>
+    <p class="lead">If you use RoboTwin 2.0-Plus, please cite our paper along with RoboTwin&nbsp;2.0.</p>
     <div class="bib">@article{zhang2026worldaction,
   title   = {Do World Action Models Generalize Better than VLAs?
              A Robustness Study},
@@ -374,7 +374,7 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
 
 <footer>
   <div class="col">
-    <p><strong>RoboTwin-Plus</strong> is a derivative work of
+    <p><strong>RoboTwin 2.0-Plus</strong> is a derivative work of
       <a href="https://github.com/TianxingChen/RoboTwin">RoboTwin&nbsp;2.0</a>, released under the
       MIT License. The perturbation taxonomy follows
       <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus</a>. See the
@@ -385,7 +385,7 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
       <a href="https://github.com/markli1hoshipu/Robotwin-plus#installation">Documentation</a> ·
       <a href="https://arxiv.org/abs/2506.18088">RoboTwin paper</a> ·
       <a href="https://arxiv.org/abs/2510.13626">LIBERO-Plus paper</a>
-      &nbsp;·&nbsp; © 2025 The RoboTwin-Plus authors, Huawei Technologies
+      &nbsp;·&nbsp; © 2025 The RoboTwin 2.0-Plus authors, Huawei Technologies
     </p>
   </div>
 </footer>

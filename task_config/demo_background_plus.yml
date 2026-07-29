@@ -1,4 +1,4 @@
-# RoboTwin-Plus: Enhanced Background Perturbation (B1 + B2)
+# RoboTwin 2.0-Plus: Enhanced Background Perturbation (B1 + B2)
 # Goes beyond original demo_randomized.yml by adding:
 #   B1+: Wall/floor color tinting (not just texture swap)
 #   B2:  Table surface material randomization (metallic, roughness, color)
@@ -17,7 +17,7 @@ domain_randomization:
   random_background: true
   clean_background_rate: 0.02
 
-  # RoboTwin-Plus: enhanced background perturbations
+  # RoboTwin 2.0-Plus: enhanced background perturbations
   background_plus:
     enabled: true
 

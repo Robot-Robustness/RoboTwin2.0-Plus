@@ -146,7 +146,7 @@ class Base_Task(gym.Env):
 
         self.random_embodiment = random_setting.get("random_embodiment", False)  # TODO
 
-        # ── RoboTwin-Plus: Enhanced background perturbation (B1+B2) ──────────
+        # ── RoboTwin 2.0-Plus: Enhanced background perturbation (B1+B2) ──────────
         bg_plus = random_setting.get("background_plus", {})
         self.bg_plus_enabled = bg_plus.get("enabled", False)
         self.bg_plus_color_tint = bg_plus.get("color_tint", True)
@@ -156,7 +156,7 @@ class Base_Task(gym.Env):
         self.bg_plus_roughness_range = bg_plus.get("roughness_range", [0.05, 0.95])
         self.bg_plus_floor_texture = bg_plus.get("floor_texture", True)
 
-        # ── RoboTwin-Plus: Object perturbation (O1 enhanced + O2 target pose) ─
+        # ── RoboTwin 2.0-Plus: Object perturbation (O1 enhanced + O2 target pose) ─
         obj_plus = random_setting.get("object_plus", {})
         self.obj_plus_enabled = obj_plus.get("enabled", False)
         self.obj_plus_distractor_min = obj_plus.get("distractor_min", 3)
@@ -272,14 +272,14 @@ class Base_Task(gym.Env):
         self.robot.set_origin_endpose()
         self.load_actors()
 
-        # ── RoboTwin-Plus O2: target object pose perturbation ────────────────
+        # ── RoboTwin 2.0-Plus O2: target object pose perturbation ────────────────
         #    After load_actors(), perturb the initial poses of task-relevant
         #    objects (everything except table/wall/ground/robot links).
         if self.obj_plus_enabled and self.obj_plus_target_pose_enabled:
             self._apply_target_pose_perturbation()
 
         if self.cluttered_table:
-            # ── RoboTwin-Plus O1: difficulty-scaled distractor count ──────────
+            # ── RoboTwin 2.0-Plus O1: difficulty-scaled distractor count ──────────
             if self.obj_plus_enabled:
                 n_distractors = np.random.randint(
                     self.obj_plus_distractor_min,
@@ -531,7 +531,7 @@ class Base_Task(gym.Env):
         else:
             self.wall_texture, self.table_texture = None, None
 
-        # ── RoboTwin-Plus B1: wall color tint (harder than plain texture swap) ──
+        # ── RoboTwin 2.0-Plus B1: wall color tint (harder than plain texture swap) ──
         wall_color = (1, 0.9, 0.9)
         if self.bg_plus_enabled and self.bg_plus_color_tint:
             lo, hi = self.bg_plus_tint_range
@@ -548,7 +548,7 @@ class Base_Task(gym.Env):
             is_static=True,
         )
 
-        # ── RoboTwin-Plus B2: table surface material randomization ───────────
+        # ── RoboTwin 2.0-Plus B2: table surface material randomization ───────────
         #    Goes beyond texture swap — randomizes metallic/roughness/color of
         #    the tabletop, creating unseen material appearances.
         table_surface_params = None
@@ -574,7 +574,7 @@ class Base_Task(gym.Env):
             surface_params=table_surface_params,
         )
 
-        # ── RoboTwin-Plus B1: floor texture randomization ────────────────────
+        # ── RoboTwin 2.0-Plus B1: floor texture randomization ────────────────────
         if self.bg_plus_enabled and self.bg_plus_floor_texture:
             floor_color = tuple(np.random.uniform(0.3, 1.0) for _ in range(3))
             self.ground = create_box(
@@ -587,7 +587,7 @@ class Base_Task(gym.Env):
             )
             print(f"[B1+] Floor color: ({floor_color[0]:.2f}, {floor_color[1]:.2f}, {floor_color[2]:.2f})")
 
-    # ── RoboTwin-Plus O2: target object pose perturbation ──────────────────
+    # ── RoboTwin 2.0-Plus O2: target object pose perturbation ──────────────────
     def _apply_target_pose_perturbation(self):
         """
         Perturb the initial pose of task-relevant objects (LIBERO-Plus O2).

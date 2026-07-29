@@ -1,4 +1,4 @@
-# RoboTwin-Plus: Language Perturbation — R2 Only (Common Sense Rewording)
+# RoboTwin 2.0-Plus: Language Perturbation — R2 Only (Common Sense Rewording)
 # Isolates R2: object names replaced with functional descriptions, verb synonyms
 # Uses pre-generated variants from task_instruction_plus/*.json
 # Ref: LIBERO-Plus R2 common sense rewording

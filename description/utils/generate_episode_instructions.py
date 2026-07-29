@@ -137,7 +137,7 @@ def load_task_instructions(task_name: str) -> Dict[str, Any]:
 
 
 # ────────────────────────────────────────────────
-# RoboTwin-Plus: Load pre-generated R2/R3 instruction variants
+# RoboTwin 2.0-Plus: Load pre-generated R2/R3 instruction variants
 # ────────────────────────────────────────────────
 def load_plus_instructions(task_name: str) -> Dict[str, Any]:
     """Load pre-generated R1/R2/R3 instruction variants from task_instruction_plus/."""

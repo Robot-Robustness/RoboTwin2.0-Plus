@@ -1,6 +1,6 @@
-# Contributing to RoboTwin-Plus
+# Contributing to RoboTwin 2.0-Plus
 
-Thanks for your interest in improving RoboTwin-Plus! This project extends
+Thanks for your interest in improving RoboTwin 2.0-Plus! This project extends
 [RoboTwin 2.0](https://github.com/TianxingChen/RoboTwin) with structured
 perturbation categories for VLA robustness evaluation. Contributions of all
 kinds are welcome — new perturbations, bug fixes, docs, and additional tasks.

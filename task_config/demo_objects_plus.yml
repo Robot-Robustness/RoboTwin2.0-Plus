@@ -1,4 +1,4 @@
-# RoboTwin-Plus: Enhanced Object Perturbation (O1 + O2)
+# RoboTwin 2.0-Plus: Enhanced Object Perturbation (O1 + O2)
 # Goes beyond original demo_randomized.yml / demo_objects.yml by adding:
 #   O1+: Difficulty-scaled distractor count (3-15, not fixed 10)
 #   O2:  Target object pose perturbation (position + rotation noise)
@@ -17,7 +17,7 @@ domain_randomization:
   cluttered_table: true
   clean_background_rate: 0.02
 
-  # RoboTwin-Plus: enhanced object perturbations
+  # RoboTwin 2.0-Plus: enhanced object perturbations
   object_plus:
     enabled: true
 
