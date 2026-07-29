@@ -197,7 +197,7 @@
       benchmark introduced in our study
       <a href="https://arxiv.org/abs/2603.22078"><i>Do World Action Models Generalize Better
       than VLAs? A Robustness Study</i></a> — a structured perturbation suite of seven
-      perturbation dimensions spanning twenty sub-dimensions across object layout,
+      perturbation dimensions spanning twenty-one sub-dimensions — a clean baseline plus twenty perturbation sub-dimensions — across object layout,
       background texture, lighting, camera viewpoint, robot initial state, language instruction,
       and sensor noise. Built on the RoboTwin 2.0 bimanual manipulation platform, every
       perturbation is applied per episode through a single declarative configuration and is
@@ -211,7 +211,7 @@
 <section>
   <div class="col">
     <p class="eyebrow">Perturbation Suite</p>
-    <h2>Seven dimensions, twenty sub-dimensions</h2>
+    <h2>Seven dimensions, twenty-one sub-dimensions</h2>
     <figure>
       <div class="pgrid">
         <div class="pcard clean">
@@ -264,8 +264,8 @@
         </div>
       </div>
       <figcaption><b>Figure 1.</b> Example head-camera observations for the clean baseline and each
-        perturbation dimension. Coverage is <b>20 / 20</b> sub-dimensions implemented
-        (19 active by default; C2 disabled for stability).</figcaption>
+        perturbation dimension. The <b>21</b>-sub-dimension taxonomy is fully implemented — the clean
+        baseline plus 20 perturbation sub-dimensions (19 active by default; C2 disabled for stability).</figcaption>
     </figure>
   </div>
 </section>
@@ -315,10 +315,10 @@ bash collect_data.sh beat_block_hammer demo_light 0</pre>
 
     <p class="taxsub"><b>Perturbation taxonomy.</b> Each dimension decomposes into sub-dimensions,
       individually configurable via YAML flags for combined or ablation-style evaluation. Table 2
-      lists all 20 sub-dimensions with implementation-level parameters.</p>
+      lists all 20 perturbation sub-dimensions with implementation-level parameters.</p>
     <div class="tbl-wrap">
       <table class="tax">
-        <caption>Table 2. RoboTwin 2.0-Plus perturbation taxonomy — 20 sub-dimensions across 7 dimensions, with parameter details.</caption>
+        <caption>Table 2. RoboTwin 2.0-Plus perturbation taxonomy — the 20 perturbation sub-dimensions across 7 dimensions (21 with the clean baseline), with parameter details.</caption>
         <thead><tr><th>Dimension</th><th>Code</th><th>Sub-dimension</th><th>Implementation details</th></tr></thead>
         <tbody>
           <tr><td class="dimcell" rowspan="5">Sensor Noise</td><td class="codecell">N1</td><td>Motion blur</td><td class="detail">Gaussian kernel (r ∈ [3, 15], σ ∈ [1, 8]), rotated by a random angle ∈ [−30°, 30°]</td></tr>

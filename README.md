@@ -4,9 +4,9 @@
 
 [![Paper](https://img.shields.io/badge/arXiv-2603.22078-b31b1b.svg)](https://arxiv.org/abs/2603.22078)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2020%20sub--dims-brightgreen)](#perturbation-taxonomy)
+[![Coverage](https://img.shields.io/badge/perturbations-7%20dims%20%C2%B7%2021%20sub--dims-brightgreen)](#perturbation-taxonomy)
 
-RoboTwin 2.0-Plus provides **7 structured perturbation dimensions (20 sub-dimensions)** — objects,
+RoboTwin 2.0-Plus provides **7 structured perturbation dimensions (21 sub-dimensions)** — objects,
 background, lighting, camera, robot state, language, and sensor noise — applied per episode
 through declarative configs to measure how VLA/WAM policies degrade under distribution shift.
 It is built on the RoboTwin 2.0 platform (two-arm Aloha-Agilex embodiment) and remains backward
@@ -55,7 +55,8 @@ A GPU is required for data collection and evaluation.
 
 RoboTwin 2.0-Plus implements the same perturbation taxonomy as its sister benchmark
 **[LIBERO-Plus](https://github.com/sylvestf/LIBERO-plus)** — both are introduced in the same
-paper. The taxonomy spans **7 perturbation dimensions across 20 sub-dimensions**:
+paper. The taxonomy comprises **21 sub-dimensions across 7 perturbation dimensions** — the clean
+(no-perturbation) baseline plus the 20 perturbation sub-dimensions listed below:
 
 | Dimension | Sub-dims | Codes | Description |
 |-----------|----------|-------|-------------|
@@ -67,8 +68,10 @@ paper. The taxonomy spans **7 perturbation dimensions across 20 sub-dimensions**
 | **Language Instructions** | 3 | R1-R3 | R1: distraction; R2: common sense rewording; R3: reasoning chain |
 | **Sensor Noise** | 5 | N1-N5 | N1: motion blur; N2: gaussian blur; N3: zoom blur; N4: fog; N5: glass blur |
 
-**Coverage: all 20 sub-dimensions implemented on the RoboTwin platform.** C2 (camera spherical
-position) is disabled by default for simulation stability, leaving 19 active out of the box.
+**Coverage: all 20 perturbation sub-dimensions implemented on the RoboTwin platform** — which,
+together with the clean baseline, make up the 21-sub-dimension taxonomy reported in the paper.
+C2 (camera spherical position) is disabled by default for simulation stability, leaving 19
+perturbation sub-dimensions active out of the box.
 
 ---
 
