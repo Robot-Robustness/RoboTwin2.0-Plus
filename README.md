@@ -25,7 +25,7 @@ RoboTwin 2.0-Plus uses the same environment as RoboTwin 2.0.
 
 ```bash
 # 1. Clone
-git clone https://github.com/markli1hoshipu/RoboTwin2.0-Plus.git
+git clone https://github.com/Robot-Robustness/RoboTwin2.0-Plus.git
 cd RoboTwin2.0-Plus
 
 # 2. Create a Python 3.10 environment (conda recommended)

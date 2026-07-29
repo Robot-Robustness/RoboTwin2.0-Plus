@@ -53,8 +53,8 @@ authors:
     email: yingxue.zhang@huawei.com
 type: software
 license: MIT
-url: "https://github.com/markli1hoshipu/RoboTwin2.0-Plus"
-repository-code: "https://github.com/markli1hoshipu/RoboTwin2.0-Plus"
+url: "https://github.com/Robot-Robustness/RoboTwin2.0-Plus"
+repository-code: "https://github.com/Robot-Robustness/RoboTwin2.0-Plus"
 keywords:
   - robotics
   - manipulation
