@@ -56,8 +56,11 @@ class Base_Task(gym.Env):
         """
         super().__init__()
         ta.setup_logging("CRITICAL")  # hide logging
-        np.random.seed(kwags.get("seed", 0))
-        torch.manual_seed(kwags.get("seed", 0))
+        seed = kwags.get("seed", 0)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        # Keep sensor corruptions from shifting RoboTwin's scene RNG stream.
+        self.sensor_noise_rng = np.random.default_rng(seed)
         # random.seed(kwags.get('seed', 0))
 
 
@@ -79,13 +82,13 @@ class Base_Task(gym.Env):
                 self.current_noise_type = noise_types[idx]
             # self.current_noise_type = np.random.choice(noise_types)
             # self.current_noise_type = 'glass'
-            self.current_severity   = np.random.randint(2, 3)          # L1..L5
+            self.current_severity = int(self.sensor_noise_rng.integers(2, 4))
             self.current_s  = (self.current_severity - 1) / 4.0
 
             if self.current_noise_type == 'zoom':
                 zoom_min = 1.00
                 zoom_max = 1.1 + self.current_s * (1.56 - 1.11)
-                self.zoom_factor = np.random.uniform(zoom_min, zoom_max)
+                self.zoom_factor = self.sensor_noise_rng.uniform(zoom_min, zoom_max)
                 print(f"Episode zoom factor FIXED: {self.zoom_factor:.3f} (range {zoom_min:.2f}–{zoom_max:.2f})")
             else:
                 self.zoom_factor = None  # not used for other noise types
@@ -779,7 +782,10 @@ class Base_Task(gym.Env):
             # Fixed version — corrected cv2 calls & variable order
             # ────────────────────────────────────────────────
 
-            if self.APPLY_SENSOR_NOISE and np.random.rand() < self.APPLY_PROBABILITY:
+            if (
+                self.APPLY_SENSOR_NOISE
+                and self.sensor_noise_rng.random() < self.APPLY_PROBABILITY
+            ):
                 for camera_name in rgb.keys():
                     img = rgb[camera_name]['rgb'].copy()   # shape (H, W, 3) uint8
 
@@ -795,12 +801,15 @@ class Base_Task(gym.Env):
                     if noise_type == 'motion':
                         r = int(3    + s * (15 - 3))     # r: 3 → 15
                         sigma = 1.0  + s * (8 - 1.0)         # sigma: 1.0 → 8.0
-                        angle = np.random.uniform(-30, 30)   # slightly narrower angle range
+                        angle = self.sensor_noise_rng.uniform(-30, 30)
 
                         ksize = 2 * r + 1
                         # Correct way — no dst argument
-                        kernel_1d = cv2.getGaussianKernel(ksize, sigma, cv2.CV_32F)
-                        kernel = kernel_1d @ kernel_1d.T   # outer product
+                        kernel_1d = cv2.getGaussianKernel(
+                            ksize, sigma, cv2.CV_32F
+                        ).ravel()
+                        kernel = np.zeros((ksize, ksize), dtype=np.float32)
+                        kernel[r, :] = kernel_1d   # oriented Gaussian motion path
 
                         # Rotate kernel
                         M = cv2.getRotationMatrix2D(((ksize-1)/2, (ksize-1)/2), angle, 1.0)
@@ -895,8 +904,12 @@ class Base_Task(gym.Env):
                         iters = int(3 - s * (3 - 1))   # 3 → 1
 
                         for _ in range(iters):
-                            dx = np.random.uniform(-delta, delta, (h, w)).astype(np.float32)
-                            dy = np.random.uniform(-delta, delta, (h, w)).astype(np.float32)
+                            dx = self.sensor_noise_rng.uniform(
+                                -delta, delta, (h, w)
+                            ).astype(np.float32)
+                            dy = self.sensor_noise_rng.uniform(
+                                -delta, delta, (h, w)
+                            ).astype(np.float32)
 
                             map_x = np.tile(np.arange(w, dtype=np.float32), (h, 1)) + dx
                             map_y = np.repeat(np.arange(h, dtype=np.float32)[:, None], w, axis=1) + dy
